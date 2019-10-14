@@ -14,7 +14,7 @@ def transform(input_files, output_files):
 
   check_call([
     'java', '-Xmx20G', #TODO automatically determine this value by file size
-    '-jar', os.path.join(os.path.dirname(__file__), '..', 'serializegmt.jar'),
+    '-jar', os.path.join(os.path.dirname(__file__), '..', 'SignatureCommonsDataIngestion.jar'),
     '-m', 'expression',
     '-r',
     '-i', input_file,
