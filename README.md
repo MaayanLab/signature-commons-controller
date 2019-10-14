@@ -1,2 +1,5 @@
 # signature-commons-controller
-Preparing and controlling signature commons with existing data / store
+
+Preparing and controlling signature commons with existing data / store.
+
+This repository include scripts to facilitate data ingestion from different forms to those which can be used by the signature commons. It can subsequently upload the processed data to the signature commons through the relevant APIs.
