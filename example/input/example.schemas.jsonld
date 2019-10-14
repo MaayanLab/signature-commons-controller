@@ -1,0 +1,36 @@
+[
+  {
+    "id": "96c4047e-47d9-48ed-9ebc-b03301068096",
+    "meta": {
+      "$validator": "/dcic/signature-commons-schema/v5/meta/schema/ui-schema.json",
+      "match": {
+        "${$validator}": "/@?dcic/signature-commons-schema/(v[0-9]+/)?core/library.json"
+      },
+      "properties": {
+        "Description": {
+          "alt": "${meta.id}",
+          "type": "text",
+          "priority": 2,
+          "visibility": 1
+        }
+      }
+    }
+  },
+  {
+    "id": "eb5db878-dec6-4cdc-a28d-d1f0894105e5",
+    "meta": {
+      "$validator": "/dcic/signature-commons-schema/v5/meta/schema/ui-schema.json",
+      "match": {
+        "${$validator}": "/@?dcic/signature-commons-schema/(v[0-9]+/)?core/signature.json"
+      },
+      "properties": {
+        "Description": {
+          "alt": "${meta.id}",
+          "type": "text",
+          "priority": 2,
+          "visibility": 1
+        }
+      }
+    }
+  }
+]
