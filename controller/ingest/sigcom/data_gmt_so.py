@@ -26,4 +26,3 @@ def ingest(input_files):
     os.path.basename(so),
     so,
   )
-  # TODO: inform data API
