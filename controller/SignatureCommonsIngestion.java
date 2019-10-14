@@ -1,199 +1,430 @@
+/* SerializeData.java
+ *
+ * This command-line java applet facilitates constructing the necessary files for
+ *  the Signature Commons Data API from UUID-transformed either a GMT or a Rank Matrix.
+ */
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Scanner;
-import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class SignatureCommonsDataIngestion {
-  public static void main(String[] args) throws Exception {
-    System.out.println(parse_file(new FileInputStream(new File("test.csv"))));
-  }
+public class SerializeData {
 
-  private static HashMap<String, Object> slice(Object left, Object right) {
-    HashMap<String, Object> ret = new HashMap<String, Object>();
-    ret.put("left", left);
-    ret.put("right", right);
-    return ret;
-  }
-  
-  private static HashMap<String, Object> resolve_slice(Object s, Object l) throws Exception {
-    if (s == null) {
-      return slice(0, l);
-    } else if (s instanceof Integer) {
-      if ((int)s < 0) {
-        return slice((int)l + (int)s, (int)l + (int)s + 1);
-      } else {
-        return slice((int)s, (int)s + 1);
-      }
-    } else if (s instanceof HashMap<?, ?>) {
-      return slice(
-        ((HashMap<?,?>)s).get("left") == null ? 0 : resolve_slice(((HashMap<?,?>)s).get("left"), l).get("left"),
-        ((HashMap<?,?>)s).get("right") == null ? l : resolve_slice(((HashMap<?,?>)s).get("right"), l).get("left")
-      );
-    }
-    throw new Exception("Cannot determine slice type");
-  }
-  
-  private static Object[][] matrix_slice(Object[][] M, Object X_slice, Object Y_slice) throws Exception {
-    HashMap<String, Object> X = resolve_slice(X_slice, M[0].length);
-    HashMap<String, Object> Y = resolve_slice(Y_slice, M.length);
-  
-    int j = 0;
-    Object[][] M_ = new Object[(int)Y.get("right") - (int)Y.get("left")][(int)X.get("right") - (int)X.get("left")];
-    for (int y = (int)Y.get("left"); y < (int)Y.get("right"); y++) {
-      int i = 0;
-      for (int x = (int)X.get("left"); x < (int)X.get("right"); x++) {
-        M_[j][i] = M[y][x];
-        i++;
-      }
-      j++;
-    }
-    return M_;
-  }
-  
-  private static Object[] matrix_flatten(Object[][] M) {
-    int X = M[0].length;
-    int Y = M.length;
-  
-    int i = 0;
-    Object[] M_ = new Object[X * Y];
-    for (int y = 0; y < Y; y++) {
-      for (int x = 0; x < X; x++) {
-        M_[i++] = M[y][x];
-      }
-    }
-  
-    return M_;
-  }
-  
-  private static Object[][] matrix_transpose(Object[][] M) {
-    int X = M[0].length;
-    int Y = M.length;
-  
-    int j = 0;
-    Object[][] M_ = new Object[X][Y];
-    for (int y = 0; y < Y; y++) {
-      int i = 0;
-      for (int x = 0; x < X; x++) {
-        M_[j][i] = M[x][y];
-        i++;
-      }
-      j++;
-    }
-  
-    return M_;
-  }
-  
-  public static int count_first_na(Object[] L) throws Exception {
-    for (int i = 0; i < L.length; i++) {
-      if (L[i] != null)
-        return i;
-    }
-    throw new Exception("NaNs not identified");
-  }
-  
-  public static HashMap<Object, Object> dictzip(Object[] header, Object[] data) {
-    HashMap<Object, Object> D = new HashMap<Object, Object>();
-    for (int i = 0; i < Math.min(header.length, data.length); i++) {
-      D.put(header[i], data[i]);
-    }
-    return D;
-  }
-  
-  public static Vector<HashMap<String, Object>> parse(Object[][] matrix) throws Exception {
-    Vector<HashMap<String, Object>> yield = new Vector<HashMap<String, Object>>();
+	public static final String ANSI_RESET = "\u001B[0m";
+	public static final String ANSI_BLACK = "\u001B[30m";
+	public static final String ANSI_RED = "\u001B[31m";
+	public static final String ANSI_GREEN = "\u001B[32m";
+	public static final String ANSI_YELLOW = "\u001B[33m";
+	public static final String ANSI_BLUE = "\u001B[34m";
+	public static final String ANSI_PURPLE = "\u001B[35m";
+	public static final String ANSI_CYAN = "\u001B[36m";
+	public static final String ANSI_WHITE = "\u001B[37m";
+	
+	public static void main(String[] args) {
+		String input = "";
+		String outputSO = "";
+		String mode = "";
+		boolean transpose = false;
+		boolean rank = false;
+		boolean printResult = false;
+		
+		if(args.length == 0 ) {
+			printhelp();
+		}
+		else {
+			try {
+				for(int i=0; i<args.length; i++) {
+					if(args[i].equals("-h") || args[i].equals("--help")) {
+						printhelp();
+						break;
+					}
+					else if(args[i].equals("-i") || args[i].equals("--input")) {
+						i++;
+						input = args[i];
+						outputSO = input.split("\\.")[0]+".so";
+					}
+					else if(args[i].equals("-o") || args[i].equals("--output")) {
+						i++;
+						outputSO = args[i];
+					}
+					else if(args[i].equals("-m") || args[i].equals("--mode")) {
+						i++;
+						mode = args[i];
+					}
+					else if(args[i].equals("-t") || args[i].equals("--transpose")) {
+						transpose = true;
+					}
+					else if(args[i].equals("-r") || args[i].equals("--rank")) {
+						rank = true;
+					}
+					else if(args[i].equals("-v") || args[i].equals("--verbose")) {
+						printResult = true;
+					}
+				}
+			}
+			catch(Exception e) {
+				printhelp();
+				e.printStackTrace();
+				System.exit(0);
+			}
+		}
 
-    int border_x = count_first_na(matrix[0]);
-    int border_y = count_first_na(matrix_flatten(matrix_slice(matrix, 0, null)));
-  
-    if (border_y <= 0 || border_x <= 0) {
-      throw new Exception("Invalid formatting");
-    }
-  
-    Object[] header_x = matrix_flatten(matrix_slice(matrix, border_x, slice(null, border_y + 1)));
-    Object[] header_y = matrix_flatten(matrix_slice(matrix, slice(null, border_x + 1), border_y));
-  
-    for (int y = border_y + 1; y < matrix.length; y++) {
-      for (int x = border_x + 1; x < matrix[0].length; x++) {
-        HashMap<String, Object> root = new HashMap<String, Object>();
+		if(mode.equals("")) {
+			
+		}
+		else if(!input.equals("") && !outputSO.equals("")) {
+			try {
+				if(mode.equals("gmt")) {
+					serializeGMTFile(input, outputSO);
+				}
+				else if(mode.equals("expression")){
+					serializeMatrix(input, transpose, outputSO, rank, printResult);
+				}
+				else {
+					printErrorStatus("Please specify a mode -m | --mode (gmt or expression).");
+				}
+				
+			}
+			catch(Exception e) {
+				printErrorStatus("Something went wrong. It wasn't my fault.");
+				e.printStackTrace();
+			}
+		}
+		
+	}
+	
+	private static void printhelp() {
+		System.out.println("Create SO objects from GMT files and gene expression matrices.");
+		System.out.println("-h | --help \t print help");
+		System.out.println("-m | --mode \t either 'gmt' or 'expression'");
+		System.out.println("-i | --input \t input GMT file (weights are discarded) when -m (--mode) is 'gmt' and expression matrix for -m is 'expression'");
+		System.out.println("-o | --output \t output SO file (default: same as -g name .so)");
+		System.out.println("-t | --transpose \t transpose input file with entities as columns and signatures as rows");
+		System.out.println("-r | --rank \t rank genes in signature. Results in a short representation.");
+		System.out.println("-v | --verbose \t print result in std");
+		System.out.println("Example: java -jar serializegmt.jar -m expression -i testrank.tsv -o testout.so -r -v");
+	}
+	
+	private static HashMap<String, Object> readMatrixTransposed(String _datamatrix) {
 
-        HashMap<Object, Object> meta = new HashMap<Object, Object>();
-        meta.putAll(
-          dictzip(
-            header_x,
-            matrix_flatten(matrix_slice(matrix, x, slice(null, border_y + 1)))
-          )
-        );
-        meta.putAll(
-          dictzip(
-            header_y,
-            matrix_flatten(matrix_slice(matrix, slice(null, border_x + 1), y))
-          )
-        );
-
-        root.put("meta", meta);
-        root.put("data", matrix[y][x]);
-
-        yield.add(root);
-      }
-    }
-
-    return yield;
-  }
-  
-  public static Object[] parse_line(String line) {
-    Vector<Object> yield = new Vector<Object>();
-
-    Pattern line_re = Pattern.compile("(^((\"([^\"]*)\")|([^,]*)),)|(((\"([^\"]*)\")|([^,]*)),)|(((\"([^\"]+)\")|([^,]+))$)");
-    Matcher line_matcher = line_re.matcher(line);
-
-    while (line_matcher.find()) {
-      Object r = line_matcher.group(2);
-      if (r == null)
-        r = line_matcher.group(7);
-      if (r == null)
-        r = line_matcher.group(12);
-      if (((String)r).equals(""))
-        r = null;
-
-      // Parse as float if possible
-      try {
-        r = Float.parseFloat((String)r);
-      } catch(Exception e) {
-      }
-
-      yield.add(r);
-    }
-    // Hack to fix not-quite-perfect regex pattern
-    if (line.charAt(line.length() - 1) == ',') {
-      yield.add(null);
-    }
-
-    return yield.toArray();
-  }
-
-  public static Object[][] parse_csv(FileInputStream data) {
-    Vector<Object[]> matrix = new Vector<Object[]>();
-    
-    Scanner scanner = new Scanner(data);
-    scanner.useDelimiter(Pattern.compile("[\\n\\r]"));
-
-    String line = scanner.nextLine();
-    int width = line.length();
-    while (scanner.hasNextLine()) {
-      matrix.add(parse_line(line));
-      line = scanner.nextLine();
-    }
-    int height = matrix.size();
-
-    scanner.close();
-
-    return matrix.toArray(new Object[height][width]);
-  }
-  
-  public static Vector<HashMap<String, Object>> parse_file(FileInputStream data) throws Exception {
-    return parse(parse_csv(data));
-  }
+		float[][] matrix = new float[0][0];
+		ArrayList<String> entities = new ArrayList<String>();
+		ArrayList<String> signature = new ArrayList<String>();
+		
+		try{
+			BufferedReader br = new BufferedReader(new FileReader(new File(_datamatrix)));
+			String line = br.readLine(); // read header
+			String[] sp = line.split("\t");
+			
+			for(int i=1; i<sp.length; i++) {
+				entities.add(sp[i]);
+			}
+			
+			int numRows = sp.length-1;
+			int numCols = 0;
+			
+			while((line = br.readLine())!= null){
+				if(line.length() > 0) {
+					numCols++;
+				}
+			}
+			br.close();
+			
+			matrix = new float[numRows][numCols];
+			
+			br = new BufferedReader(new FileReader(new File(_datamatrix)));
+			line = br.readLine(); // read header
+			int idx = 0;
+			
+			while((line = br.readLine())!= null){
+				sp = line.split("\t");
+				
+				signature.add(sp[0]);
+				for(int i=1; i<sp.length; i++) {
+					matrix[i-1][idx] = Float.parseFloat(sp[i]);
+				}
+				idx++;
+			}
+			br.close();
+			
+			printGoodStatus("Detected "+numRows+" unique genes");
+			printGoodStatus("Detected "+numCols+" unique signatures");
+		}
+		catch(Exception e){
+			printErrorStatus("Error when reading file. Input file possibly does not exist or has wrong format.");
+			e.printStackTrace();
+			System.exit(0);
+		}
+		
+		HashMap<String, Object> matrix_so = new HashMap<String, Object>();
+		matrix_so.put("entity_id", entities.toArray(new String[0]));
+		matrix_so.put("signature_id", signature.toArray(new String[0]));
+		matrix_so.put("matrix", matrix);
+		
+		return matrix_so;
+	}
+	
+	private static HashMap<String, Object> readMatrix(String _datamatrix) {
+		float[][] matrix = new float[0][0];
+		ArrayList<String> entities = new ArrayList<String>();
+		ArrayList<String> signature = new ArrayList<String>();
+		
+		try{
+			BufferedReader br = new BufferedReader(new FileReader(new File(_datamatrix)));
+			String line = br.readLine(); // read header
+			String[] sp = line.split("\t");
+			
+			for(int i=1; i<sp.length; i++) {
+				signature.add(sp[i]);
+			}
+			
+			int numCols = sp.length-1;
+			int numRows = 0;
+			
+			while((line = br.readLine())!= null){
+				if(line.length() > 0) {
+					numRows++;
+				}
+			}
+			br.close();
+			
+			matrix = new float[numRows][numCols];
+			
+			br = new BufferedReader(new FileReader(new File(_datamatrix)));
+			line = br.readLine(); // read header
+			int idx = 0;
+			
+			while((line = br.readLine())!= null){
+				sp = line.split("\t");
+				
+				entities.add(sp[0]);
+				for(int i=1; i<sp.length; i++) {
+					matrix[idx][i-1] = Float.parseFloat(sp[i]);
+				}
+				idx++;
+			}
+			br.close();
+			
+			printGoodStatus("Detected "+numRows+" unique genes");
+			printGoodStatus("Detected "+numCols+" unique signatures");
+		}
+		catch(Exception e){
+			printErrorStatus("Error when reading file. Input file possibly does not exist or has wrong format.");
+			e.printStackTrace();
+			System.exit(0);
+		}
+		
+		HashMap<String, Object> matrix_so = new HashMap<String, Object>();
+		matrix_so.put("entity_id", entities.toArray(new String[0]));
+		matrix_so.put("signature_id", signature.toArray(new String[0]));
+		matrix_so.put("matrix", matrix);
+		
+		return matrix_so;
+	}
+	
+	public static void serializeMatrix(String _datamatrix, boolean _transpose, String _output, boolean _rank, boolean _printResult) {
+		HashMap<String, Object> matrix_so = null;
+		if(_transpose) {
+			matrix_so = readMatrixTransposed(_datamatrix);
+		}
+		else {
+			matrix_so = readMatrix(_datamatrix);
+		}
+		
+		if(_rank) {
+			float[][] matrix = (float[][]) matrix_so.get("matrix");
+			short[][] rankMatrix = new short[matrix.length][matrix[0].length];
+			float[] temp = new float[matrix.length];
+			
+			for(int i=0; i<matrix[0].length; i++) {
+				for(int j=0; j<matrix.length; j++) {
+					temp[j] = matrix[j][i];
+				}
+				short[] ranks = ranksHash(temp);
+				for(int j=0; j<ranks.length; j++) {
+					rankMatrix[j][i] = ranks[j];
+				}
+			}
+			
+			matrix_so.put("matrix", rankMatrix);
+			
+			if(_printResult) {
+				String[] sigs = (String[]) matrix_so.get("signature_id");
+				System.out.println("\t"+String.join(", ",sigs));
+				for(int i=0; i<rankMatrix.length; i++) {
+					System.out.println(((String[]) matrix_so.get("entity_id"))[i]+"\t"+Arrays.toString(rankMatrix[i]));
+				}
+			}
+		}
+		
+		serialize(matrix_so, _output);
+		
+		printGoodStatus("Serialization completed into file "+_output);
+		printGoodStatus("Done");
+	}
+	
+	public static void serializeGMTFile(String _gmtfile, String _output) {
+		
+		HashMap<String, short[]> genesets = new HashMap<String, short[]>();
+		HashMap<String, Short> dictionary = new HashMap<String, Short>();
+		HashMap<Short, String> revDictionary = new HashMap<Short, String>();
+		
+		try{
+			
+			BufferedReader br = new BufferedReader(new FileReader(new File(_gmtfile)));
+			String line = "";
+			
+			// building index mapping first
+			printGoodStatus("Building gene index");
+			
+			short idx = Short.MIN_VALUE;
+			boolean commas = false;
+			while((line = br.readLine())!= null){
+				String[] sp = line.split("\t");
+				
+				for(int i=2; i<sp.length; i++) {
+					String[] gene_split = sp[i].split(",");
+					if(gene_split.length > 1) {
+						commas = true;
+					}
+					String gene = gene_split[0];
+					
+					if(!dictionary.containsKey(gene)) {
+						dictionary.put(gene, idx);
+						revDictionary.put(idx, gene);
+						idx++;
+					}
+				}
+			}
+			br.close();
+			
+			printGoodStatus("Detected "+dictionary.size()+" unique genes");
+			if(commas) {
+				printWarningStatus("Gene weights detected and removed");
+			}
+			else {
+				printGoodStatus("Unweighted GMT detected");
+			}
+			
+			br = new BufferedReader(new FileReader(new File(_gmtfile)));
+			line = "";
+			
+			while((line = br.readLine())!= null){
+				
+				String[] sp = line.split("\t");
+				String uid = sp[0];
+				
+				ArrayList<Short> arrl = new ArrayList<Short>();
+				
+				for(int i=2; i<sp.length; i++) {
+					sp[i] = sp[i].split(",")[0];
+					arrl.add(dictionary.get(sp[i]));
+				}
+				
+				short[] set = new short[arrl.size()];
+				for(int i=0; i<arrl.size(); i++) {
+					set[i] = (short) arrl.get(i);
+				}
+				
+				if(set.length < 1) {
+					printWarningStatus("Warning: geneset "+uid+" is empty");
+				}
+				
+				genesets.put(uid, set);
+			}
+			br.close();
+			
+		}
+		catch(Exception e) {
+			printErrorStatus("Error when reading file. Input file possibly does not exist or has wrong format.");
+			e.printStackTrace();
+			System.exit(0);
+		}		
+		
+		HashMap<String, Object> setdata = new HashMap<String, Object>();
+		setdata.put("geneset", genesets);
+		setdata.put("dictionary", dictionary);
+		setdata.put("revDictionary", revDictionary);
+		
+		printGoodStatus("Detected "+genesets.size()+" gene sets");
+		printGoodStatus("Created compressed geneset representation");
+		
+		serialize(setdata, _output);
+		printGoodStatus("Serialized data to file: "+_output);
+		printGoodStatus("All done");
+	}
+	
+	public static void printGoodStatus(String _text) {
+		System.out.println(ANSI_GREEN + _text + ANSI_RESET);
+	}
+	
+	public static void printWarningStatus(String _text) {
+		System.out.println(ANSI_YELLOW + _text + ANSI_RESET);
+	}
+	
+	public static void printErrorStatus(String _text) {
+		System.out.println(ANSI_RED + _text + ANSI_RESET);
+	}
+	
+	public static void serialize(Object _o, String _outfile) {
+		try {
+			FileOutputStream file = new FileOutputStream(_outfile);
+	        ObjectOutputStream out = new ObjectOutputStream(file);
+	         
+	        // Method for serialization of object
+	        out.writeObject(_o);
+	         
+	        out.close();
+	        file.close();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static Object deserialize(String _file) {
+		Object ob = null;
+		try{   
+            // Reading the object from a file
+            FileInputStream file = new FileInputStream(_file);
+            ObjectInputStream in = new ObjectInputStream(file);
+             
+            // Method for deserialization of object
+            ob = (Object)in.readObject();
+             
+            in.close();
+            file.close();
+        }
+        catch(Exception e){
+            e.printStackTrace();
+        }
+		
+		return ob;
+	}
+	
+	private static short[] ranksHash(float[] _temp) {
+		
+		float[] sc = new float[_temp.length];
+		System.arraycopy(_temp, 0, sc, 0, _temp.length);
+		Arrays.sort(sc);
+		
+		HashMap<Float, Short> hm = new HashMap<Float, Short>(sc.length);
+		for (short i = 0; i < sc.length; i++) {
+			hm.put(sc[i], i);
+		}
+		
+		short[] ranks = new short[sc.length];
+		
+		for (int i = 0; i < _temp.length; i++) {
+			ranks[i] = (short)(hm.get(_temp[i])+1);
+		}
+		return ranks;
+	}
 }
