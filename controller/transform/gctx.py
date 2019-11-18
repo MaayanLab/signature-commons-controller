@@ -23,7 +23,7 @@ def transform(input_files, output_files):
   try:
     with open(signature_meta, 'w') as fw:
       for ind, row in enumerate(fr.get('META').get('ROW')):
-        rid = uuid.uuid4()
+        rid = str(uuid.uuid4())
         rids[ind] = rid
         print(json.dumps({ '@id': rid, '@type': 'Signature', 'meta': dict(row) }), file=fw)
   except Exception as e:
@@ -34,7 +34,7 @@ def transform(input_files, output_files):
   try:
     with open(entity_meta, 'w') as fw:
       for ind, row in enumerate(fr.get('META').get('ROW')):
-        cid = uuid.uuid4()
+        cid = str(uuid.uuid4())
         cids[ind] = cid
         print(json.dumps({ '@id': cid, '@type': 'Entity', 'meta': dict(row) }), file=fw)
   except Exception as e:
