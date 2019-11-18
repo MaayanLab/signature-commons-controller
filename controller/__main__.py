@@ -2,10 +2,9 @@ import os
 import sys
 import glob
 import itertools
-from .ingest import sigcom
-from . import transform
 
 def potential_transfomers(files):
+  from . import transform
   for t in transform.transformers:
     basenames = set(f.split('.', maxsplit=1)[0] for f in files)
     for basename in basenames:
@@ -38,8 +37,8 @@ def do_transform(files):
     )
 
 
-def potential_ingests(files):
-  for i in sigcom.ingests:
+def potential_ingests(ingests, files):
+  for i in ingests:
     basenames = set(f.split('.', maxsplit=1)[0] for f in files)
     for basename in basenames:
       P = {}
@@ -56,8 +55,8 @@ def potential_ingests(files):
             dict(zip(P.keys(), fs)),
           )
 
-def do_ingest(files):
-  Q = list(potential_ingests(files))
+def do_ingest(potential_ingests):
+  Q = list(potential_ingests)
   D = set()
   while Q != []:
     i, inp_kwargs = Q.pop(0)
@@ -71,6 +70,13 @@ def do_ingest(files):
 if sys.argv[1] == '-t':
   do_transform(sys.argv[2:])
 elif sys.argv[1] == '-i':
-  do_ingest(sys.argv[2:])
+  if sys.argv[2] == 'sigcom':
+    from .ingest import sigcom
+    do_ingest(potential_ingests(sigcom.ingests, sys.argv[3:]))
+  elif sys.argv[2] == 'mongo':
+    from .ingest import mongo
+    do_ingest(potential_ingests(mongo.ingests, sys.argv[3:]))
+  else:
+    print('Unrecognized ingest target `{}`'.format(sys.argv[2]))
 else:
-  print('Usage: {} <-t | -i> <files ...>'.format(sys.argv[0]))
+  print('Usage: {} <-t | -i <sigcom | mongo>> <files ...>'.format(sys.argv[0]))
