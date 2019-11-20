@@ -1,26 +1,25 @@
 import os
 import pymongo
 import json
-from urllib.parse import urlparse
-from dotenv import load_dotenv
+from ...util import first, mongo_bulk_upsert
 
 inputs = (
   '*.signatures.jsonld',
 )
 
-after = tuple()
+def requirements(uri=[], **kwargs):
+  return 'mongo' in set([u.scheme for u in uri])
 
-def ingest(input_files):
+def ingest(input_files, uri=[], limit=1000, **kawrgs):
   input_file, = input_files
-  #
-  load_dotenv()
-  #
-  mongo_uri = urlparse(os.environ['MONGO_URI'])
-  mongo = pymongo.MongoClient('{scheme}://{netloc}'.format(
-    scheme=mongo_uri.scheme,
-    netloc=mongo_uri.netloc,
-  ))
-  #
+  # Get mongo uri
+  mongo_uri = first(u for u in uri if 'mongo' in u.scheme.split('+'))
+  # Get extract mongo db name
+  db = mongo_uri.path[1:]
+  del mongo_uri.path
+  # Instantiate mongo client
+  mongo = pymongo.MongoClient(str(mongo_uri))
+  # Get mongo db
   db = getattr(mongo, mongo_uri.path[1:])
   #
   def generate_signatures():
@@ -35,29 +34,8 @@ def ingest(input_files):
           },
         }
   #
-  bulk_upsert(
+  mongo_bulk_upsert(
     db.signature_meta,
     generate_signatures(),
+    limit=limit,
   )
-
-
-def chunk(iterable, chunks=1000):
-  ''' Chunk iterators helper
-  '''
-  buffer = []
-  for i, element in enumerate(iterable, start=1):
-    buffer.append(element)
-    if i % chunks == 0:
-      yield buffer
-      buffer = []
-  if buffer:
-    yield buffer
-
-def bulk_upsert(collection, iterable, chunks=1000):
-  ''' mongo bulk insertion helper
-  '''
-  for it in chunk(iterable, chunks=chunks):
-    collection.bulk_write([
-      pymongo.UpdateOne(filter, update, upsert=True)
-      for filter, update in it
-    ], ordered=False)
