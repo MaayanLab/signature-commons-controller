@@ -7,27 +7,28 @@ inputs = (
 )
 
 def requirements(uri=[], **kwargs):
-  return 'mongo' in set([u.scheme for u in uri])
+  return 'mongodb' in set([u.scheme for u in uri])
 
 def ingest(input_files, uri=[], limit=1000, **kawrgs):
   input_file, = input_files
   # Get mongo uri
-  mongo_uri = first(u for u in uri if 'mongo' in u.scheme.split('+'))
+  mongo_uri = first(u for u in uri if 'mongodb' in u.scheme.split('+'))
   # Get extract mongo db name
-  db = mongo_uri.path[1:]
+  db_path = mongo_uri.path[1:]
   del mongo_uri.path
   # Instantiate mongo client
   mongo = pymongo.MongoClient(str(mongo_uri))
   # Get mongo db
-  db = getattr(mongo, mongo_uri.path[1:])
+  db = getattr(mongo, db_path)
   #
   def generate_signatures():
     with open(input_file, 'r') as fr:
       for line in fr:
-        sigid, ents = line.strip().split('\t\t', maxsplit=1)
-        entids = ents.split('\t')
+        sigid, ents = line.split('\t\t', maxsplit=1)
+        entids = ents.strip().split('\t')
         yield {
           '_id': sigid,
+        }, {
           '$set': {
             'data.set': {
               entid: 1

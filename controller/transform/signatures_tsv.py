@@ -20,7 +20,7 @@ def try_json_loads(v):
   except:
     return v
 
-def transform(input_files, output_files):
+def transform(input_files, output_files, **kwargs):
   input_file, = input_files
   output_file, = output_files
 

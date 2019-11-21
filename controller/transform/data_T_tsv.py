@@ -14,7 +14,7 @@ outputs = (
   '*.data.uuid.T.tsv',
 )
 
-def transform(input_files, output_files):
+def transform(input_files, output_files, **kwargs):
   tsv, signature_meta, entity_meta = input_files
   signature_data, = output_files
 

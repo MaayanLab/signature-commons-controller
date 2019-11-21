@@ -23,7 +23,7 @@ class ParsedUrl:
     self._fragment = self._parsed.fragment
   #
   def __delattr__(self, attr):
-    if attr in ['username', 'password', 'port', 'query', 'fragment']:
+    if attr in ['username', 'password', 'port', 'path', 'query', 'fragment']:
       setattr(self, attr, None)
     else:
       super().__delattr__(attr)
@@ -63,7 +63,7 @@ class ParsedUrl:
       netloc += '@'
     netloc += parsed['hostname']
     if parsed['port']:
-      netloc += ':' + parsed['port']
+      netloc += ':' + str(parsed['port'])
     self.netloc = netloc
   #
   @property

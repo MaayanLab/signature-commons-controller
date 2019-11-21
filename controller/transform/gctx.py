@@ -13,7 +13,7 @@ outputs = (
   '*.entities.jsonld',
 )
 
-def transform(input_files, output_files):
+def transform(input_files, output_files, **kwargs):
   input_file, = input_files
   signature_data, signature_meta, entity_meta = output_files
 

@@ -1,3 +1,4 @@
+import itertools
 import argparse
 import logging
 from . import router
@@ -51,11 +52,13 @@ def main():
   _add_uris(ingest_parser)
   _add_paths(ingest_parser)
   transform_parser = subparsers.add_parser('transform', help='Apply transformations to data in directory')
-  _add_uris(transform_parser)
   _add_paths(transform_parser)
   #
   args = parser.parse_args(sys.argv[1:])
-  args.uri = [ParsedUrl(u) for us in args.uri for u in us]
+  if getattr(args, 'uri', None) is not None:
+    args.uri = [ParsedUrl(u) for us in args.uri for u in us]
+  if getattr(args, 'paths', None) is not None:
+    args.paths = list(itertools.chain(*args.paths))
   logging.basicConfig(level=max(0, 40 - args.verbose*10))
   logging.info('Processing action:{action}'.format(action=args.action))
   return getattr(router, args.action)(**args.__dict__)

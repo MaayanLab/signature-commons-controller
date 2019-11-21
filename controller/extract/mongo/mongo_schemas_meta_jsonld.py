@@ -1,12 +1,13 @@
 import os.path
 import pymongo
+import json
 from ...util import first
 
 def requirements(uri=[], **kwargs):
   return 'mongodb' in set([s for u in uri for s in u.scheme.split('+')])
 
 outputs = (
-  '*.data.uuid.gmt',
+  '*.schemas.jsonld',
 )
 
 def extract(path=None, uri=[], **kwargs):
@@ -20,14 +21,14 @@ def extract(path=None, uri=[], **kwargs):
   # Get mongo db
   db = getattr(mongo, db_path)
   #
-  for dataset in db.datasets.find({'@type': 'geneset'}, {'_id': 1}):
-    with open(os.path.join(path, '{}_{}.data.uuid.gmt'.format(db_path, dataset['_id'])), 'w') as fw:
-      for signature in db.signature_data.find({
-        'dataset': dataset['_id'],
-        'data.set': { '$ne': None }
-      }, {
-        '_id': 1,
-        'data.set': 1
-      }):
-        print(str(signature['_id']), '', *signature['data']['set'].keys(), sep='\t', file=fw)
+  tbl = 'schemas'
+  with open(os.path.join(path, '{}.{}.jsonld'.format(db_path, tbl)), 'w') as fw:
+    collection = getattr(db, tbl)
+    for signature in collection.find():
+      print(json.dumps(_process_obj(signature)), file=fw)
   #
+
+def _process_obj(obj):
+  obj['@id'] = str(obj['_id'])
+  del obj['_id']
+  return obj

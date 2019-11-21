@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 
 def get_actions(**kwargs):
   from . import action as actions
@@ -46,10 +47,13 @@ def relevant_extracts(path=None, **kwargs):
   import os.path
   import itertools
   #
-  files = [
-    f
-    for f in (os.listdir(path) if os.path.isdir(path) else glob.glob(path))
-  ]
+  if os.path.isdir(path):
+    files = [
+      os.path.join(path, f)
+      for f in os.listdir(path)
+    ]
+  else:
+    files = glob.glob(path)
   #
   for e in get_extracts(path=path, **kwargs):
     P = {}
@@ -64,7 +68,7 @@ def relevant_extracts(path=None, **kwargs):
 def extract(**kwargs):
   for extract in relevant_extracts(**kwargs):
     logging.debug('Extracting with {}'.format(extract))
-    extract.extract(**kwargs)
+    extract.extract(**deepcopy(kwargs))
 
 
 def get_ingests(**kwargs):
@@ -89,45 +93,51 @@ def get_ingests(**kwargs):
 def relevant_ingests(paths=[], **kwargs):
   ''' Relevant ingests are those whos inputs are satisfiable
   '''
+  # TODO: Holdout with after
   import glob
   import os.path
   import itertools
   #
-  files = [
-    f
-    for p in paths
-    for f in (os.listdir(p) if os.path.isdir(p) else glob.glob(p))
-  ]
+  files = []
+  for p in paths:
+    if os.path.isdir(p):
+      files += [
+        os.path.join(p, f)
+        for f in os.listdir(p)
+      ]
+    else:
+      files += glob.glob(p)
   #
   for i in get_ingests(paths=paths, **kwargs):
     basenames = set(f.split('.', maxsplit=1)[0] for f in files)
+    print(basenames)
     for basename in basenames:
       P = {}
       for f in files:
-        if not f.startswith(basename):
+        if f.split('.', maxsplit=1)[0] != basename:
           continue
         for inp in i.inputs:
           if glob.fnmatch.fnmatch(f, inp):
             P[inp] = P.get(inp, set()) | set([f])
+      print(i.inputs, P)
       if set(i.inputs) == set(P.keys()):
         for fs in itertools.product(*P.values()):
-          logging.debug('Found relevant ingest: {}'.format(i))
+          logging.debug('Found relevant ingest: {}({})'.format(i, fs))
           yield (
             i,
             dict(zip(P.keys(), fs)),
           )
 
 def ingest(**kwargs):
-  # TODO: worry about potential inf. loops
-  ingest_queue = list(relevant_ingests(**kwargs))
-  ingest_completed = set()
-  while ingest_queue != []:
-    ingest, input_files = ingest_queue.pop()
-    if set(ingest.after) - ingest_completed:
-      ingest_queue.append((ingest, input_files))
-    else:
-      ingest.ingest(input_files, **kwargs)
-
+  for ingest, input_files in relevant_ingests(**kwargs):
+    print(ingest, input_files)
+    ingest.ingest(
+      tuple(
+        input_files[k]
+        for k in ingest.inputs
+      ),
+      **deepcopy(kwargs)
+    )
 
 def get_transformers(**kwargs):
   from . import transform as transformers
@@ -152,18 +162,22 @@ def relevant_transformers(paths=[], **kwargs):
   import os.path
   import itertools
   #
-  files = [
-    f
-    for p in paths
-    for f in (os.listdir(p) if os.path.isdir(p) else glob.glob(p))
-  ]
+  files = []
+  for p in paths:
+    if os.path.isdir(p):
+      files += [
+        os.path.join(p, f)
+        for f in os.listdir(p)
+      ]
+    else:
+      files += glob.glob(p)
   #
   for t in get_transformers(paths=paths, **kwargs):
     basenames = set(f.split('.', maxsplit=1)[0] for f in files)
     for basename in basenames:
       P = {}
       for f in files:
-        if not f.startswith(basename):
+        if f.split('.', maxsplit=1)[0] != basename:
           continue
         for inp in t.inputs:
           if glob.fnmatch.fnmatch(f, inp):
@@ -184,4 +198,15 @@ def relevant_transformers(paths=[], **kwargs):
 
 def transform(**kwargs):
   for transform, input_files, output_files in relevant_transformers(**kwargs):
-    transform.transform(input_files, output_files, **kwargs)
+    print(transform, input_files, output_files)
+    transform.transform(
+      tuple(
+        input_files[k]
+        for k in transform.inputs
+      ),
+      tuple(
+        output_files[k]
+        for k in transform.outputs
+      ),
+      **deepcopy(kwargs),
+    )
