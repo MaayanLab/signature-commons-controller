@@ -53,5 +53,8 @@ def _prepare_obj(obj):
   obj['$validator'] = '/dcic/signature-commons-schema/v5/core/resource.json'
   if obj.get('@type'):
     del obj['@type']
-  obj['meta']['$validator'] = '/dcic/signature-commons-schema/v5/core/unknown.json'
+  if obj['meta'] and obj['meta'].get('@type'):
+    obj['meta']['$validator'] = obj['meta']['@type']
+  elif not obj['meta'].get('$validator'):
+    obj['meta']['$validator'] = '/dcic/signature-commons-schema/v5/core/unknown.json'
   return obj
