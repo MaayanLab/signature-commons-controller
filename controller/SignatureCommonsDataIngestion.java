@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
-public class SerializeData {
+public class SignatureCommonsDataIngestion {
 
 	public static final String ANSI_RESET = "\u001B[0m";
 	public static final String ANSI_BLACK = "\u001B[30m";
@@ -240,7 +240,7 @@ public class SerializeData {
 		
 		if(_rank) {
 			float[][] matrix = (float[][]) matrix_so.get("matrix");
-			short[][] rankMatrix = new short[matrix.length][matrix[0].length];
+			short[][] rankMatrix = new short[matrix[0].length][matrix.length];
 			float[] temp = new float[matrix.length];
 			
 			for(int i=0; i<matrix[0].length; i++) {
@@ -249,7 +249,7 @@ public class SerializeData {
 				}
 				short[] ranks = ranksHash(temp);
 				for(int j=0; j<ranks.length; j++) {
-					rankMatrix[j][i] = ranks[j];
+					rankMatrix[i][j] = ranks[j];
 				}
 			}
 			
