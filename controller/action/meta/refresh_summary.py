@@ -2,8 +2,10 @@ from urllib.request import Request, urlopen
 from ...util import first
 import base64
 
-def requirements(uri=[], **kwargs):
-  return 'meta' in set([u.scheme for u in uri])
+def requirements(actions=[], uri=[], **kwargs):
+  if actions and 'refresh_summary' not in actions:
+    return False
+  return 'meta' in set([s for u in uri for s in u.scheme.split('+')])
 
 def apply(uri=[], **kwargs):
   # Get the meta_uri only
