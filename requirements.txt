@@ -1,4 +1,5 @@
 https://github.com/u8sand/PySwaggerClient/archive/v1.0.zip
+minio
 numpy
 pandas
 python-dotenv
