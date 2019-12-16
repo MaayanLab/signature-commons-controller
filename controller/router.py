@@ -19,6 +19,11 @@ def get_actions(**kwargs):
     except Exception as e:
       logging.debug('Rejected: {}, {}'.format(mod, e))
 
+def action(action=None, **kwargs):
+  for action in get_actions(**kwargs):
+    logging.debug('Applying action {}'.format(action))
+    action.apply(**deepcopy(kwargs))
+
 
 def get_extracts(**kwargs):
   from . import extract as extracts

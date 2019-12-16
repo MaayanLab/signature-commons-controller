@@ -26,6 +26,13 @@ def _add_path(parser):
     help='Path containing directory to be processed (default to current directory)',
   )
 #
+def _add_actions(parser):
+  parser.add_argument(
+    '--actions', metavar='ACTION', type=str,
+    nargs='*', action='append', required=False,
+    help='Restrict actions to apply',
+  )
+#
 def main():
   import sys
   import itertools
@@ -53,12 +60,17 @@ def main():
   _add_paths(ingest_parser)
   transform_parser = subparsers.add_parser('transform', help='Apply transformations to data in directory')
   _add_paths(transform_parser)
+  action_parser = subparsers.add_parser('action', help='Trigger API action such as data reloading')
+  _add_uris(action_parser)
+  _add_actions(action_parser)
   #
   args = parser.parse_args(sys.argv[1:])
   if getattr(args, 'uri', None) is not None:
     args.uri = [ParsedUrl(u) for us in args.uri for u in us]
   if getattr(args, 'paths', None) is not None:
     args.paths = list(itertools.chain(*args.paths))
+  if getattr(args, 'actions', None) is not None:
+    args.actions = list(itertools.chain(*args.actions))
   logging.basicConfig(level=max(0, 40 - args.verbose*10))
   logging.info('Processing action:{action}'.format(action=args.action))
   return getattr(router, args.action)(**args.__dict__)
