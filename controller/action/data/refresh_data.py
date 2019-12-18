@@ -43,7 +43,7 @@ def apply(uri=[], **kwargs):
           data=json.dumps({
             'bucket': s3_bucket,
             'file': obj.object_name,
-            'datasetname': obj.object_name,
+            'datasetname': obj.object_name.split('.', maxsplit=1)[0],
           }).encode(),
         )
       )
