@@ -1,2 +1,2 @@
-from ..util.importdir import importdir_deep
+from controller.util.importdir import importdir_deep
 importdir_deep(__file__, __package__, globals())

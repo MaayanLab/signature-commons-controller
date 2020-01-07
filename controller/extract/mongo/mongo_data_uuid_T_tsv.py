@@ -1,7 +1,7 @@
 import os.path
 import pymongo
 import csv
-from ...util import first
+from controller.util import first
 
 def requirements(uri=[], **kwargs):
   return 'mongodb' in set([s for u in uri for s in u.scheme.split('+')])

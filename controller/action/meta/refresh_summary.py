@@ -1,5 +1,5 @@
 from urllib.request import Request, urlopen
-from ...util import first
+from controller.util import first
 import base64
 
 def requirements(actions=[], uri=[], **kwargs):

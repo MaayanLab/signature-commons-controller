@@ -1,7 +1,7 @@
 import os
 import pymongo
 import json
-from ...util import first, mongo_bulk_upsert
+from controller.util import first, mongo_bulk_upsert
 
 inputs = (
   '*.entities.jsonld',

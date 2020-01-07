@@ -1,4 +1,4 @@
-from ...util import first, chunk
+from controller.util import first, chunk
 from urllib.request import Request, urlopen
 import base64
 import json

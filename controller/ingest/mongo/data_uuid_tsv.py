@@ -1,7 +1,7 @@
 import os
 import pymongo
 import csv
-from ...util import first, mongo_bulk_upsert
+from controller.util import first, mongo_bulk_upsert
 
 inputs = (
   '*.data.uuid.tsv',

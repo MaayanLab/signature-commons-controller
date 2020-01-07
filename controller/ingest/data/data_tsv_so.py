@@ -1,6 +1,6 @@
 import os
 import minio
-from ...util.first import first
+from controller.util.first import first
 
 inputs = (
   '*.data.tsv.so',
