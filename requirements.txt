@@ -2,4 +2,5 @@ https://github.com/u8sand/PySwaggerClient/archive/v1.0.zip
 minio
 numpy
 pandas
+psycopg2
 python-dotenv
