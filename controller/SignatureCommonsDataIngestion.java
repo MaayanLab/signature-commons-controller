@@ -5,10 +5,12 @@
  */
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
@@ -26,14 +28,15 @@ public class SignatureCommonsDataIngestion {
 	public static final String ANSI_PURPLE = "\u001B[35m";
 	public static final String ANSI_CYAN = "\u001B[36m";
 	public static final String ANSI_WHITE = "\u001B[37m";
-	
+
 	public static void main(String[] args) {
 		String input = "";
-		String outputSO = "";
+		String output = "";
 		String mode = "";
 		boolean transpose = false;
 		boolean rank = false;
 		boolean printResult = false;
+		boolean deserializeFlag = false;
 		
 		if(args.length == 0 ) {
 			printhelp();
@@ -48,11 +51,10 @@ public class SignatureCommonsDataIngestion {
 					else if(args[i].equals("-i") || args[i].equals("--input")) {
 						i++;
 						input = args[i];
-						outputSO = input.split("\\.")[0]+".so";
 					}
 					else if(args[i].equals("-o") || args[i].equals("--output")) {
 						i++;
-						outputSO = args[i];
+						output = args[i];
 					}
 					else if(args[i].equals("-m") || args[i].equals("--mode")) {
 						i++;
@@ -63,6 +65,9 @@ public class SignatureCommonsDataIngestion {
 					}
 					else if(args[i].equals("-r") || args[i].equals("--rank")) {
 						rank = true;
+					}
+					else if(args[i].equals("-d") || args[i].equals("--deserialize")) {
+						deserializeFlag = true;
 					}
 					else if(args[i].equals("-v") || args[i].equals("--verbose")) {
 						printResult = true;
@@ -76,28 +81,50 @@ public class SignatureCommonsDataIngestion {
 			}
 		}
 
-		if(mode.equals("")) {
-			
-		}
-		else if(!input.equals("") && !outputSO.equals("")) {
-			try {
-				if(mode.equals("gmt")) {
-					serializeGMTFile(input, outputSO);
+		if (deserializeFlag) {
+			if (!input.equals("")) {
+				HashMap<String, Object> obj = (HashMap<String, Object>)deserialize(input);
+				if (obj.keySet().contains("geneset")) {
+					if (output.equals("")) {
+						output = input.substring(0, input.lastIndexOf('.')) + ".gmt";
+					}
+					writeGMT(obj, output);
+				} else {
+					if (output.equals("")) {
+						output = input.substring(0, input.lastIndexOf('.')) + ".tsv";
+					}
+					if (transpose) {
+						writeMatrixTransposed(obj, output);
+					} else {
+						writeMatrix(obj, output);
+					}
 				}
-				else if(mode.equals("expression")){
-					serializeMatrix(input, transpose, outputSO, rank, printResult);
-				}
-				else {
-					printErrorStatus("Please specify a mode -m | --mode (gmt or expression).");
-				}
+			}
+		} else {
+			if(mode.equals("")) {
 				
 			}
-			catch(Exception e) {
-				printErrorStatus("Something went wrong. It wasn't my fault.");
-				e.printStackTrace();
+			else if(!input.equals("")) {
+				try {
+					if(output.equals("")) {
+						output = input.substring(0, input.lastIndexOf('.'))+".so";
+					}
+					if(mode.equals("gmt")) {
+						serializeGMTFile(input, output);
+					}
+					else if(mode.equals("expression")){
+						serializeMatrix(input, transpose, output, rank, printResult);
+					}
+					else {
+						printErrorStatus("Please specify a mode -m | --mode (gmt or expression).");
+					}
+				}
+				catch(Exception e) {
+					printErrorStatus("Something went wrong. It wasn't my fault.");
+					e.printStackTrace();
+				}
 			}
 		}
-		
 	}
 	
 	private static void printhelp() {
@@ -108,6 +135,7 @@ public class SignatureCommonsDataIngestion {
 		System.out.println("-o | --output \t output SO file (default: same as -g name .so)");
 		System.out.println("-t | --transpose \t transpose input file with entities as columns and signatures as rows");
 		System.out.println("-r | --rank \t rank genes in signature. Results in a short representation.");
+		System.out.println("-d | --deserialize \t the input SO into the output gmt or tsv");
 		System.out.println("-v | --verbose \t print result in std");
 		System.out.println("Example: java -jar serializegmt.jar -m expression -i testrank.tsv -o testout.so -r -v");
 	}
@@ -170,7 +198,7 @@ public class SignatureCommonsDataIngestion {
 		
 		return matrix_so;
 	}
-	
+
 	private static HashMap<String, Object> readMatrix(String _datamatrix) {
 		float[][] matrix = new float[0][0];
 		ArrayList<String> entities = new ArrayList<String>();
@@ -228,7 +256,57 @@ public class SignatureCommonsDataIngestion {
 		
 		return matrix_so;
 	}
-	
+
+	private static void writeMatrixTransposed(HashMap<String, Object> matrix_so, String _output) {
+		String[] entity_id = (String[]) matrix_so.get("entity_id");
+		String[] signature_id = (String[]) matrix_so.get("signature_id");
+		short[][] rank = (short[][]) matrix_so.get("rank");
+		if (rank == null) { // from legacy export
+			rank = (short[][]) matrix_so.get("matrix");
+		}
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(new File(_output)));
+			bw.write(String.join("\t", entity_id) + "\n");
+			for (int sid = 0; sid < signature_id.length; sid++) {
+				bw.write(signature_id[sid]);
+				for (int eid = 0; eid < entity_id.length; eid++) {
+					bw.write("\t" + Short.toString(rank[sid][eid]));
+				}
+				bw.write("\n");
+			}
+			bw.close();
+		} catch (Exception e) {
+			printErrorStatus("Error when writing file.");
+			e.printStackTrace();
+			System.exit(0);
+		}
+	}
+
+	private static void writeMatrix(HashMap<String, Object> matrix_so, String _output) {
+		String[] entity_id = (String[]) matrix_so.get("entity_id");
+		String[] signature_id = (String[]) matrix_so.get("signature_id");
+		short[][] rank = (short[][]) matrix_so.get("rank");
+		if (rank == null) { // from legacy export
+			rank = (short[][]) matrix_so.get("matrix");
+		}
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(new File(_output)));
+			bw.write(String.join("\t", signature_id) + "\n");
+			for (int eid = 0; eid < entity_id.length; eid++) {
+				bw.write(entity_id[eid]);
+				for (int sid = 0; sid < signature_id.length; sid++) {
+					bw.write("\t" + Short.toString(rank[sid][eid]));
+				}
+				bw.write("\n");
+			}
+			bw.close();
+		} catch (Exception e) {
+			printErrorStatus("Error when writing file.");
+			e.printStackTrace();
+			System.exit(0);
+		}
+	}
+
 	public static void serializeMatrix(String _datamatrix, boolean _transpose, String _output, boolean _rank, boolean _printResult) {
 		HashMap<String, Object> matrix_so = null;
 		if(_transpose) {
@@ -359,6 +437,28 @@ public class SignatureCommonsDataIngestion {
 		serialize(setdata, _output);
 		printGoodStatus("Serialized data to file: "+_output);
 		printGoodStatus("All done");
+	}
+
+	public static void writeGMT(HashMap<String, Object> setdata, String _output) {
+		HashMap<String, short[]> genesets = (HashMap<String, short[]>) setdata.get("geneset");
+		HashMap<Short, String> revDictionary = (HashMap<Short, String>) setdata.get("revDictionary");
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(new File(_output)));
+			for (String signature : genesets.keySet()) {
+				bw.write(signature + "\t");
+				short[] entity_ids = genesets.get(signature);
+				for (Short entity_id : entity_ids) {
+					String entity = revDictionary.get(entity_id);
+					bw.write("\t" + entity);
+				}
+				bw.write("\n");
+			}
+			bw.close();
+		} catch (Exception e) {
+			printErrorStatus("Error when writing file.");
+			e.printStackTrace();
+			System.exit(0);
+		}
 	}
 	
 	public static void printGoodStatus(String _text) {
