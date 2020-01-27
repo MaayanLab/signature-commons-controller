@@ -12,7 +12,7 @@ def requirements(uri=[], **kwargs):
 def ingest(input_files, uri=[], limit=1000, **kwargs):
   input_file, = input_files
   # Get the psql_uri only
-  psql_uri = first(u for u in uri if 'meta' in u.scheme.split('+'))
+  psql_uri = first(u for u in uri if 'psql' in u.scheme.split('+'))
   # Connect to db
   con = psycopg2.connect(
     database=psql_uri.path[1:],
