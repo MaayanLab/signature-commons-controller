@@ -27,4 +27,4 @@ def ingest(input_files, uri=[], limit=1000, **kwargs):
       columns=('uuid', 'resource', 'dataset', 'dataset_type', 'meta'),
       sep='\t',
     )
-  cur.commit()
+  con.commit()
