@@ -22,9 +22,24 @@ def ingest(input_files, uri=[], limit=1000, **kwargs):
     port=psql_uri.port,
   )
   cur = con.cursor()
+  cur.execute('''
+    create table resources_tmp
+    as table resources
+    with no data;
+  ''')
   with open(input_file, 'r') as fr:
-    cur.copy_from(fr, 'resources',
+    cur.copy_from(fr, 'resources_tmp',
       columns=('uuid', 'meta'),
       sep='\t',
     )
+  cur.execute('''
+    insert into resources (uuid, meta)
+      select uuid, meta
+      from resources_tmp
+      on conflict (uuid)
+        do update
+        set meta = excluded.meta
+    ;
+  ''')
+  cur.execute('drop table resources_tmp;')
   con.commit()

@@ -22,9 +22,25 @@ def ingest(input_files, uri=[], limit=1000, **kwargs):
     port=psql_uri.port,
   )
   cur = con.cursor()
+  cur.execute('''
+    create table signatures_tmp
+    as table signatures
+    with no data;
+  ''')
   with open(input_file, 'r') as fr:
-    cur.copy_from(fr, 'signatures',
+    cur.copy_from(fr, 'signatures_tmp',
       columns=('uuid', 'libid', 'meta'),
       sep='\t',
     )
+  cur.execute('''
+    insert into signatures (uuid, libid, meta)
+      select uuid, libid, meta
+      from signatures_tmp
+      on conflict (uuid)
+        do update
+        set libid = excluded.libid,
+            meta = excluded.meta
+    ;
+  ''')
+  cur.execute('drop table signatures_tmp;')
   con.commit()
