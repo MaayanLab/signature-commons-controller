@@ -3,7 +3,7 @@ from copy import deepcopy
 
 def get_actions(**kwargs):
   from . import action as actions
-  for mod in actions.__dict__.values():
+  for _, mod in sorted(actions.__dict__.items()):
     if str(type(mod)) != "<class 'module'>":
       continue
     try:
@@ -27,7 +27,7 @@ def action(action=None, **kwargs):
 
 def get_extracts(**kwargs):
   from . import extract as extracts
-  for mod in extracts.__dict__.values():
+  for _, mod in sorted(extracts.__dict__.items()):
     if str(type(mod)) != "<class 'module'>":
       continue
     try:
@@ -78,7 +78,7 @@ def extract(**kwargs):
 
 def get_ingests(**kwargs):
   from . import ingest as ingests
-  for mod in ingests.__dict__.values():
+  for _, mod in sorted(ingests.__dict__.items()):
     if str(type(mod)) != "<class 'module'>":
       continue
     try:
@@ -146,7 +146,7 @@ def ingest(**kwargs):
 
 def get_transformers(**kwargs):
   from . import transform as transformers
-  for mod in transformers.__dict__.values():
+  for _, mod in sorted(transformers.__dict__.items()):
     if str(type(mod)) != "<class 'module'>":
       continue
     try:
