@@ -34,6 +34,7 @@ for file in os.listdir(INPUT):
 
 # Step 2. Create library based on common attributes
 full_library = with_canonical_uuid({
+  'resource': None,
   'dataset': 'example.data.tsv.so',
   'dataset_type': 'rank_matrix',
   'meta': {
@@ -42,6 +43,7 @@ full_library = with_canonical_uuid({
   }
 })
 geneset_library = with_canonical_uuid({
+  'resource': None,
   'dataset': 'example.data.gmt.so',
   'dataset_type': 'geneset_library',
   'meta': {

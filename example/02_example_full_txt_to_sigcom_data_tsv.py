@@ -22,7 +22,7 @@ for file in os.listdir(INPUT):
 
 # Second pass--logfc + adjpval to expr
 with open(os.path.join(OUTPUT, 'example.data.T.tsv'), 'w') as fw:
-  print(*genes, sep='\t', file=fw)
+  print('', *genes, sep='\t', file=fw)
   for file in os.listdir(INPUT):
     if file.endswith('_full.txt'):
       sig_id = file[:-len('_full.txt')]
