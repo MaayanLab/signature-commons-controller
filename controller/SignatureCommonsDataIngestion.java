@@ -194,7 +194,7 @@ public class SignatureCommonsDataIngestion {
 		HashMap<String, Object> matrix_so = new HashMap<String, Object>();
 		matrix_so.put("entity_id", entities.toArray(new String[0]));
 		matrix_so.put("signature_id", signature.toArray(new String[0]));
-		matrix_so.put("rank", matrix);
+		matrix_so.put("matrix", matrix);
 		
 		return matrix_so;
 	}
@@ -252,7 +252,7 @@ public class SignatureCommonsDataIngestion {
 		HashMap<String, Object> matrix_so = new HashMap<String, Object>();
 		matrix_so.put("entity_id", entities.toArray(new String[0]));
 		matrix_so.put("signature_id", signature.toArray(new String[0]));
-		matrix_so.put("rank", matrix);
+		matrix_so.put("matrix", matrix);
 		
 		return matrix_so;
 	}
