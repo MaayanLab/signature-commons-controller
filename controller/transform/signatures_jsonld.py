@@ -2,10 +2,10 @@ import json
 import os
 
 inputs = (
-  '*.entities.jsonld',
+  '*.signatures.jsonld',
 )
 outputs = (
-  '*.entities.psql.tsv',
+  '*.signatures.psql.tsv',
 )
 
 def transform(input_files, output_files, **kwargs):
