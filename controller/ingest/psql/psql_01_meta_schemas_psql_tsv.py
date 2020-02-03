@@ -30,6 +30,7 @@ def ingest(input_files, uri=[], limit=1000, **kwargs):
   with open(input_file, 'r') as fr:
     cur.copy_from(fr, 'schemas_tmp',
       columns=('uuid', 'meta'),
+      null='',
       sep='\t',
     )
   cur.execute('''

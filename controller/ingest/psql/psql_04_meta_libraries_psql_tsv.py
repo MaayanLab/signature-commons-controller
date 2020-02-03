@@ -30,6 +30,7 @@ def ingest(input_files, uri=[], limit=1000, **kwargs):
   with open(input_file, 'r') as fr:
     cur.copy_from(fr, 'libraries_tmp',
       columns=('uuid', 'resource', 'dataset', 'dataset_type', 'meta'),
+      null='',
       sep='\t',
     )
   cur.execute('''
