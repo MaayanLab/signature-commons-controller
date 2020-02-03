@@ -19,6 +19,6 @@ def transform(input_files, output_files, **kwargs):
           '' if doc.get('resource') is None else doc['resource'],
           '' if doc.get('dataset') is None else doc['dataset'],
           '' if doc.get('dataset_type') is None else doc['dataset_type'],
-          doc['meta'],
+          json.dumps(doc['meta']),
           sep='\t', file=fw
         )

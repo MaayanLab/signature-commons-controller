@@ -15,6 +15,6 @@ def transform(input_files, output_files, **kwargs):
     with open(output_file, 'w') as fw:
       for doc in map(json.loads, fr):
         print(
-          doc['@id'], doc['meta'],
+          doc['@id'], json.dumps(doc['meta']),
           sep='\t', file=fw
         )
