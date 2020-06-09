@@ -1,6 +1,8 @@
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 from controller.util import first
 import base64
+import time
 
 def requirements(actions=[], uri=[], **kwargs):
   if actions and 'refresh_summary' not in actions:
@@ -19,12 +21,26 @@ def apply(uri=[], **kwargs):
   meta_uri.path = meta_uri.path + '/summary/refresh'
   meta_uri.scheme = ''.join(set(['http', 'https']) & set(meta_uri.scheme.split('+')))
   # Make the request
-  return urlopen(
-    Request(
-      str(meta_uri),
-      headers={
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic {}'.format(metadata_token)
-      },
-    )
-  )
+  backoff = 2
+  while True:
+    try:
+      req = urlopen(
+        Request(
+          str(meta_uri),
+          headers={
+            'Content-Type': 'application/json',
+            'Authorization': 'Basic {}'.format(metadata_token)
+          },
+        )
+      )
+      print('[refresh_summary]: done')
+      return req
+    except HTTPError as e:
+      if e.code == 409:
+        backoff *= 2
+        print('[refresh_summary]: An operation is already in progress: {}, trying again in {}s'.format(e.read(), backoff))
+        time.sleep(backoff)
+        continue
+      else:
+        print('[refresh_summary]: HTTP Error {}: {}'.format(e.code, e.read()))
+      break
