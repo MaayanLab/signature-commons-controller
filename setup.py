@@ -12,6 +12,6 @@ setup(
   packages=find_packages(exclude=('example',)),
   include_package_data=True,
   entry_points={
-    'console_scripts': ['sigcom=sigcom.__main__:main'],
+    'console_scripts': ['sigcom=sigcom.__main__:cli'],
   }
 )

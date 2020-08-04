@@ -1,2 +1,4 @@
-from sigcom.cli import main
-main()
+from sigcom.cli import cli
+
+if __name__ == '__main__':
+  cli()
