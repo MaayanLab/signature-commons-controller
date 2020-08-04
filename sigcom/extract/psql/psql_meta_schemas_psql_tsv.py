@@ -1,6 +1,6 @@
 import psycopg2
 import os.path
-from controller.util import first
+from sigcom.util import first
 
 outputs = (
   '*.schemas.psql.tsv',

@@ -1,6 +1,6 @@
 import os
 import pymongo
-from controller.util import first, mongo_bulk_upsert
+from sigcom.util import first, mongo_bulk_upsert
 
 inputs = (
   '*.data.uuid.gmt',

@@ -1,6 +1,6 @@
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
-from controller.util import first
+from sigcom.util import first
 import base64
 import time
 

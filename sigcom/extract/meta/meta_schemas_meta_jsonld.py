@@ -1,7 +1,7 @@
 import os, os.path
 import json
 import base64
-from controller.util import first, pagination
+from sigcom.util import first, pagination
 from urllib.request import Request, urlopen
 
 def requirements(uri=[], **kwargs):

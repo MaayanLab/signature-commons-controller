@@ -1,6 +1,6 @@
 import os
 import minio
-from controller.util.first import first
+from sigcom.util.first import first
 
 inputs = (
   '*.data.gmt.so',

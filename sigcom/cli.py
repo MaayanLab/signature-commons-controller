@@ -1,8 +1,8 @@
 import itertools
 import argparse
 import logging
-from . import router
-from .util import ParsedUrl
+from sigcom import router
+from sigcom.util import ParsedUrl
 
 def _add_uris(parser):
   uriGroup = parser.add_argument_group('uri')

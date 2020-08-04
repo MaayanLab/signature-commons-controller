@@ -1,5 +1,5 @@
 from urllib.request import Request, urlopen
-from controller.util import first
+from sigcom.util import first
 import minio
 import json
 

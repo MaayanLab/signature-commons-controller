@@ -1,6 +1,6 @@
 import psycopg2
 import os.path
-from controller.util import first
+from sigcom.util import first
 
 inputs = (
   '*.resources.psql.tsv',

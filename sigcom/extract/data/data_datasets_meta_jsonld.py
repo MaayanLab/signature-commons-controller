@@ -1,7 +1,7 @@
 import os
 import pymongo
 import json
-from controller.util import first
+from sigcom.util import first
 from urllib.request import Request, urlopen
 
 def requirements(uri=[], **kwargs):

@@ -1,2 +1,2 @@
-from .cli import main
+from sigcom.cli import main
 main()
