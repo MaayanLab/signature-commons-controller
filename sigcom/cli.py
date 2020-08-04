@@ -71,7 +71,7 @@ def extract(dry_run=False, **kwargs):
 @cli.command(help='Ingest data from directory to database')
 @handle_verbosity
 @handle_uris
-@handle_path
+@handle_paths
 @handle_dry_run
 def ingest(dry_run=False, **kwargs):
   if dry_run:
