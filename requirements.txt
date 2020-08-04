@@ -1,7 +1,7 @@
-git+git://github.com/u8sand/PySwaggerClient@v1.0
 minio
 numpy
 pandas
 psycopg2
-python-dotenv
 pymongo
+PySwaggerClient @ git+git://github.com/u8sand/PySwaggerClient.git@v1.0
+python-dotenv
