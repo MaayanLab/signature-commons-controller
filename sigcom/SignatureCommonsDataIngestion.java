@@ -318,7 +318,7 @@ public class SignatureCommonsDataIngestion {
 		
 		if(_rank) {
 			float[][] matrix = (float[][]) matrix_so.get("matrix");
-			short[][] rankMatrix = new short[matrix[0].length][matrix.length];
+			short[][] rankMatrix = new short[matrix.length][matrix[0].length];
 			float[] temp = new float[matrix.length];
 			
 			for(int i=0; i<matrix[0].length; i++) {
@@ -327,7 +327,7 @@ public class SignatureCommonsDataIngestion {
 				}
 				short[] ranks = ranksHash(temp);
 				for(int j=0; j<ranks.length; j++) {
-					rankMatrix[i][j] = ranks[j];
+					rankMatrix[j][i] = ranks[j];
 				}
 			}
 			

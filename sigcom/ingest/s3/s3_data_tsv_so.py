@@ -13,7 +13,8 @@ def ingest(input_files, uri=[], **kwargs):
   so, = input_files
   # Get s3 uri
   s3_uri = first(u for u in uri if 's3' in u.scheme.split('+'))
-  s3_bucket = s3_uri.path[1:]
+  [_, s3_bucket, *subpath] = s3_uri.path.split('/')
+  s3_prefix = '/'.join(subpath)
   s3_access_key = s3_uri.username
   s3_secret_key = s3_uri.password
   del s3_uri.username
@@ -27,6 +28,6 @@ def ingest(input_files, uri=[], **kwargs):
   # Upload object
   s3_client.fput_object(
     s3_bucket,
-    os.path.basename(so),
+    '/'.join(filter(None, [s3_prefix, os.path.basename(so)])),
     so,
   )
