@@ -154,36 +154,38 @@ public class SignatureCommonsDataIngestion {
 			for(int i=1; i<sp.length; i++) {
 				entities.add(sp[i]);
 			}
-			
-			int numRows = sp.length-1;
-			int numCols = 0;
+
+			int numColsEnt = sp.length-1;
+			int numRowsSig = 0;
 			
 			while((line = br.readLine())!= null){
 				if(line.length() > 0) {
-					numCols++;
+					numRowsSig++;
 				}
 			}
 			br.close();
 			
-			matrix = new float[numRows][numCols];
+			matrix = new float[numRowsSig][numColsEnt];
 			
 			br = new BufferedReader(new FileReader(new File(_datamatrix)));
 			line = br.readLine(); // read header
-			int idx = 0;
+			int idxSig = 0;
 			
 			while((line = br.readLine())!= null){
-				sp = line.split("\t");
-				
-				signature.add(sp[0]);
-				for(int i=1; i<sp.length; i++) {
-					matrix[i-1][idx] = Float.parseFloat(sp[i]);
+				if(line.length() > 0) {
+					sp = line.split("\t");
+					
+					signature.add(sp[0]);
+					for(int i=1; i<sp.length; i++) {
+						matrix[idxSig][i-1] = Float.parseFloat(sp[i]);
+					}
+					idxSig++;
 				}
-				idx++;
 			}
 			br.close();
 			
-			printGoodStatus("Detected "+numRows+" unique genes");
-			printGoodStatus("Detected "+numCols+" unique signatures");
+			printGoodStatus("Detected "+numColsEnt+" unique genes");
+			printGoodStatus("Detected "+numRowsSig+" unique signatures");
 		}
 		catch(Exception e){
 			printErrorStatus("Error when reading file. Input file possibly does not exist or has wrong format.");
@@ -213,35 +215,37 @@ public class SignatureCommonsDataIngestion {
 				signature.add(sp[i]);
 			}
 			
-			int numCols = sp.length-1;
-			int numRows = 0;
+			int numColsSig = sp.length-1;
+			int numRowsEnt = 0;
 			
 			while((line = br.readLine())!= null){
 				if(line.length() > 0) {
-					numRows++;
+					numRowsEnt++;
 				}
 			}
 			br.close();
 			
-			matrix = new float[numRows][numCols];
+			matrix = new float[numColsSig][numRowsEnt];
 			
 			br = new BufferedReader(new FileReader(new File(_datamatrix)));
 			line = br.readLine(); // read header
-			int idx = 0;
+			int idxEnt = 0;
 			
 			while((line = br.readLine())!= null){
-				sp = line.split("\t");
-				
-				entities.add(sp[0]);
-				for(int i=1; i<sp.length; i++) {
-					matrix[idx][i-1] = Float.parseFloat(sp[i]);
+				if(line.length() > 0) {
+					sp = line.split("\t");
+					
+					entities.add(sp[0]);
+					for(int i=1; i<sp.length; i++) {
+						matrix[i-1][idxEnt] = Float.parseFloat(sp[i]);
+					}
+					idxEnt++;
 				}
-				idx++;
 			}
 			br.close();
 			
-			printGoodStatus("Detected "+numRows+" unique genes");
-			printGoodStatus("Detected "+numCols+" unique signatures");
+			printGoodStatus("Detected "+numRowsEnt+" unique genes");
+			printGoodStatus("Detected "+numColsSig+" unique signatures");
 		}
 		catch(Exception e){
 			printErrorStatus("Error when reading file. Input file possibly does not exist or has wrong format.");
@@ -318,19 +322,15 @@ public class SignatureCommonsDataIngestion {
 		
 		if(_rank) {
 			float[][] matrix = (float[][]) matrix_so.get("matrix");
-			short[][] rankMatrix = new short[matrix[0].length][matrix.length];
-			float[] temp = new float[matrix.length];
+			short[][] rankMatrix = new short[matrix.length][matrix[0].length];
 			
-			for(int i=0; i<matrix[0].length; i++) {
-				for(int j=0; j<matrix.length; j++) {
-					temp[j] = matrix[j][i];
-				}
-				short[] ranks = ranksHash(temp);
-				for(int j=0; j<ranks.length; j++) {
-					rankMatrix[i][j] = ranks[j];
-				}
+			for(int sig=0; sig<matrix.length; sig++) {
+				rankMatrix[sig] = ranksHash(matrix[sig]);
 			}
 			
+			printGoodStatus("shape: (signatures, entities) = ("+rankMatrix.length+", "+rankMatrix[0].length+")");
+			
+			matrix_so.remove("matrix");
 			matrix_so.put("rank", rankMatrix);
 			
 			if(_printResult) {
