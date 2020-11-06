@@ -16,6 +16,7 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class SignatureCommonsDataIngestion {
 
@@ -399,7 +400,7 @@ public class SignatureCommonsDataIngestion {
 				String[] sp = line.split("\t");
 				String uid = sp[0];
 				
-				ArrayList<Short> arrl = new ArrayList<Short>();
+				HashSet<Short> arrl = new HashSet<Short>();
 				
 				for(int i=2; i<sp.length; i++) {
 					sp[i] = sp[i].split(",")[0];
@@ -407,8 +408,9 @@ public class SignatureCommonsDataIngestion {
 				}
 				
 				short[] set = new short[arrl.size()];
-				for(int i=0; i<arrl.size(); i++) {
-					set[i] = (short) arrl.get(i);
+				int i = 0;
+				for(Short v : arrl) {
+					set[i++] = (short) v;
 				}
 				
 				if(set.length < 1) {
