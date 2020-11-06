@@ -25,5 +25,6 @@ def extract(path=None, uri=[], **kwargs):
   with open(os.path.join(path, '{}.{}.psql.tsv'.format(psql_uri.path[1:], tbl)), 'w') as fw:
     cur.copy_to(fw, tbl,
       columns=('uuid', 'libid', 'meta'),
+      null='',
       sep='\t',
     )
