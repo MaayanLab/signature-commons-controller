@@ -30,7 +30,7 @@ def ingest(input_files, uri=[], limit=1000, **kwargs):
   ''')
   with open(input_file, 'r') as fr:
     cur.copy_from(fr, 'signatures_entities_tmp',
-      columns=('signature', 'entitiy'),
+      columns=('signature', 'entity'),
       null='',
       sep='\t',
     )
@@ -41,7 +41,7 @@ def ingest(input_files, uri=[], limit=1000, **kwargs):
       on conflict (signature, entity)
         do update
         set signature = excluded.signature,
-            entitiy = excluded.entity
+            entity = excluded.entity
     ;
   ''')
   cur.execute('drop table signatures_entities_tmp;')
