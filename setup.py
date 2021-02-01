@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
   name='signature-commons-controller',
-  version='0.2.1',
+  version='0.1.1',
   url='https://github.com/MaayanLab/signature-commons-controller',
   author='Daniel J. B. Clarke',
   author_email='u8sand@gmail.com',
@@ -12,6 +12,6 @@ setup(
   packages=find_packages(exclude=('example',)),
   include_package_data=True,
   entry_points={
-    'console_scripts': ['sigcom=sigcom.__main__:main'],
+    'console_scripts': ['sigcom=sigcom.__main__:cli'],
   }
 )

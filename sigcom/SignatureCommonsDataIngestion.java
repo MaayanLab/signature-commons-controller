@@ -324,9 +324,16 @@ public class SignatureCommonsDataIngestion {
 		if(_rank) {
 			float[][] matrix = (float[][]) matrix_so.get("matrix");
 			short[][] rankMatrix = new short[matrix.length][matrix[0].length];
+			float[] temp = new float[matrix.length];
 			
-			for(int sig=0; sig<matrix.length; sig++) {
-				rankMatrix[sig] = ranksHash(matrix[sig]);
+			for(int i=0; i<matrix[0].length; i++) {
+				for(int j=0; j<matrix.length; j++) {
+					temp[j] = matrix[j][i];
+				}
+				short[] ranks = ranksHash(temp);
+				for(int j=0; j<ranks.length; j++) {
+					rankMatrix[j][i] = ranks[j];
+				}
 			}
 			
 			printGoodStatus("shape: (signatures, entities) = ("+rankMatrix.length+", "+rankMatrix[0].length+")");
