@@ -4,7 +4,7 @@ import os.path
 from sigcom.util import first
 
 inputs = (
-  '*.signatures.entities.psql.tsv',
+  '*.many_to_many.psql.tsv',
 )
 
 def requirements(uri=[], **kwargs):
