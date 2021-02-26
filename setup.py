@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
   name='signature-commons-controller',
-  version='0.2.1',
+  version='0.2.2',
   url='https://github.com/MaayanLab/signature-commons-controller',
   author='Daniel J. B. Clarke',
   author_email='u8sand@gmail.com',
