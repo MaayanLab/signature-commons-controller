@@ -30,13 +30,13 @@ def ingest(input_files, uri=[], limit=1000, **kwargs):
   ''')
   with open(input_file, 'r') as fr:
     cur.copy_from(fr, 'signatures_entities_tmp',
-      columns=('signature', 'entity'),
+      columns=('signature', 'entity', "direction"),
       null='',
       sep='\t',
     )
   cur.execute('''
-    insert into signatures_entities (signature, entity)
-      select signature, entity
+    insert into signatures_entities (signature, entity, direction)
+      select signature, entity, direction
       from signatures_entities_tmp
       on conflict do nothing
     ;
