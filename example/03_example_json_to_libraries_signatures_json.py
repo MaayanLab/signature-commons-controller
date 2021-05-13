@@ -51,13 +51,13 @@ geneset_library = with_canonical_uuid({
     for k, v in common_attrs
   }
 })
-with open(os.path.join(OUTPUT, 'example.libraries.jsonld'), 'w') as fw:
+with open(os.path.join(OUTPUT, 'example.libraries.jsonl'), 'w') as fw:
   print(json.dumps(full_library), file=fw)
   print(json.dumps(geneset_library), file=fw)
 
 
 # Step 1. Pass 2--create proper signature with library association
-with open(os.path.join(OUTPUT, 'example.signatures.jsonld'), 'w') as fw:
+with open(os.path.join(OUTPUT, 'example.signatures.jsonl'), 'w') as fw:
   for file in os.listdir(INPUT):
     if file.endswith('.json'):
       base_sig_id = file[:-len('.json')]

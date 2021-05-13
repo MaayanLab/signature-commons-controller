@@ -3,4 +3,4 @@
 INPUT=input
 OUTPUT=output
 
-cat "${INPUT}/example.schemas.jsonld" | jq -c '.[]' > "${OUTPUT}/example.schemas.jsonld"
+cat "${INPUT}/example.schemas.jsonld" | jq -c '.[]' > "${OUTPUT}/example.schemas.jsonl"
