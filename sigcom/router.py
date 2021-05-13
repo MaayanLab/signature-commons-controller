@@ -2,7 +2,7 @@ import logging
 from copy import deepcopy
 
 def get_actions(**kwargs):
-  from . import action as actions
+  import sigcom.action as actions
   for _, mod in sorted(actions.__dict__.items()):
     if str(type(mod)) != "<class 'module'>":
       continue
@@ -26,7 +26,7 @@ def action(action=None, **kwargs):
 
 
 def get_extracts(**kwargs):
-  from . import extract as extracts
+  import sigcom.extract as extracts
   for _, mod in sorted(extracts.__dict__.items()):
     if str(type(mod)) != "<class 'module'>":
       continue
@@ -50,7 +50,6 @@ def relevant_extracts(path=None, **kwargs):
   '''
   import glob
   import os.path
-  import itertools
   #
   if os.path.isdir(path):
     files = [
@@ -77,7 +76,7 @@ def extract(**kwargs):
 
 
 def get_ingests(**kwargs):
-  from . import ingest as ingests
+  import sigcom.ingest as ingests
   for _, mod in sorted(ingests.__dict__.items()):
     if str(type(mod)) != "<class 'module'>":
       continue
@@ -145,7 +144,7 @@ def ingest(**kwargs):
     )
 
 def get_transformers(**kwargs):
-  from . import transform as transformers
+  import sigcom.transform as transformers
   for _, mod in sorted(transformers.__dict__.items()):
     if str(type(mod)) != "<class 'module'>":
       continue

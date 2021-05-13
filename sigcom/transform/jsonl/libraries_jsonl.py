@@ -1,8 +1,7 @@
 import json
-import os
 
 inputs = (
-  '*.libraries.jsonld',
+  '*.libraries.jsonl',
 )
 outputs = (
   '*.libraries.psql.tsv',

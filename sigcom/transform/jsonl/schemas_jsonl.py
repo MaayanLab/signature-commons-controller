@@ -1,8 +1,7 @@
 import json
-import os
 
 inputs = (
-  '*.schemas.jsonld',
+  '*.schemas.jsonl',
 )
 outputs = (
   '*.schemas.psql.tsv',
