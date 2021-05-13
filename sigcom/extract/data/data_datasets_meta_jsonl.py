@@ -8,7 +8,7 @@ def requirements(uri=[], **kwargs):
   return 'data' in set([s for u in uri for s in u.scheme.split('+')])
 
 outputs = (
-  '*.datasets.meta.jsonld',
+  '*.datasets.meta.jsonl',
 )
 
 def extract(path=None, uri=[], **kwargs):
@@ -32,7 +32,7 @@ def extract(path=None, uri=[], **kwargs):
       )
     )
   )['repositories']
-  with open(os.path.join(path, '_.datasets.meta.jsonld'), 'w') as fw:
+  with open(os.path.join(path, '_.datasets.meta.jsonl'), 'w') as fw:
     for repo in repos:
       print(json.dumps({
         '@id': repo['uuid'],

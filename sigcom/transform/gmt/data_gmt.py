@@ -1,12 +1,10 @@
-import csv
-import uuid
 import json
 import os
 
 inputs = (
   '*.data.gmt',
-  '*.signatures.jsonld',
-  '*.entities.jsonld',
+  '*.signatures.jsonl',
+  '*.entities.jsonl',
 )
 
 outputs = (

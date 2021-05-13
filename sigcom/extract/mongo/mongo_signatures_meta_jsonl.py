@@ -7,7 +7,7 @@ def requirements(uri=[], **kwargs):
   return 'mongodb' in set([s for u in uri for s in u.scheme.split('+')])
 
 outputs = (
-  '*.resources.jsonld',
+  '*.signatures.jsonl',
 )
 
 def extract(path=None, uri=[], **kwargs):
@@ -21,9 +21,8 @@ def extract(path=None, uri=[], **kwargs):
   # Get mongo db
   db = getattr(mongo, db_path)
   #
-  tbl = 'resources'
-  with open(os.path.join(path, '{}.{}.jsonld'.format(db_path, tbl)), 'w') as fw:
-    collection = getattr(db, tbl)
+  with open(os.path.join(path, '{}.signatures.jsonl'.format(db_path)), 'w') as fw:
+    collection = getattr(db, 'signature_meta')
     for signature in collection.find():
       print(json.dumps(_process_obj(signature)), file=fw)
   #
@@ -31,4 +30,6 @@ def extract(path=None, uri=[], **kwargs):
 def _process_obj(obj):
   obj['@id'] = str(obj['_id'])
   del obj['_id']
+  if obj.get('library'):
+    obj['library'] = str(obj['library'])
   return obj

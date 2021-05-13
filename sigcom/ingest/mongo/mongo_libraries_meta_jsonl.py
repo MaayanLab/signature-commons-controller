@@ -1,10 +1,9 @@
-import os
 import pymongo
 import json
 from sigcom.util import first, mongo_bulk_upsert
 
 inputs = (
-  '*.signatures.jsonld',
+  '*.libraries.jsonl',
 )
 
 def requirements(uri=[], **kwargs):
@@ -22,20 +21,18 @@ def ingest(input_files, uri=[], limit=1000, **kawrgs):
   # Get mongo db
   db = getattr(mongo, db_path)
   #
-  def generate_signatures():
+  def generate_libraries():
     with open(input_file, 'r') as fr:
-      for signature in map(json.loads, fr):
+      for library in map(json.loads, fr):
         yield {
-          '_id': signature['@id'],
+          '_id': library['@id'],
         }, {
           '$set': {
-            'library': signature['library'],
-            'meta': signature['meta'],
+            'meta': library['meta'],
           },
         }
   #
   mongo_bulk_upsert(
-    db.signature_meta,
-    generate_signatures(),
-    limit=limit,
+    db.libraries,
+    generate_libraries(),
   )

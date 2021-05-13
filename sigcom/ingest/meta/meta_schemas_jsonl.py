@@ -2,16 +2,11 @@ from sigcom.util import first, chunk
 from urllib.request import Request, urlopen
 import base64
 import json
-import os
 
-name = 'meta_libraries_jsonld'
-
-after = (
-  'meta_resources_jsonld',
-)
+name = 'meta_schemas_jsonl'
 
 inputs = (
-  '*.libraries.jsonld',
+  '*.schemas.jsonl',
 )
 
 def requirements(uri=[], **kwargs):
@@ -37,7 +32,7 @@ def ingest(input_files, uri=[], limit=1000, **kwargs):
           str(meta_uri),
           data=json.dumps([
             {
-              'operationId': 'Library.find_or_create',
+              'operationId': 'Schema.find_or_create',
               'requestBody': [
                 _prepare_obj(obj)
                 for obj in objs
@@ -54,7 +49,7 @@ def ingest(input_files, uri=[], limit=1000, **kwargs):
 def _prepare_obj(obj):
   obj['id'] = obj['@id']
   del obj['@id']
-  obj['$validator'] = '/dcic/signature-commons-schema/v5/core/library.json'
+  obj['$validator'] = '/dcic/signature-commons-schema/v5/core/schema.json'
   if obj.get('@type'):
     del obj['@type']
   if obj['meta'] and obj['meta'].get('@type'):

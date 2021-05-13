@@ -8,7 +8,7 @@ def requirements(uri=[], **kwargs):
   return 'meta' in set([s for u in uri for s in u.scheme.split('+')])
 
 outputs = (
-  '*.entities.jsonld',
+  '*.entities.jsonl',
 )
 
 def extract(path=None, uri=[], limit=1000, **kwargs):
@@ -24,7 +24,7 @@ def extract(path=None, uri=[], limit=1000, **kwargs):
   meta_base_path = meta_uri.path
   #
   tbl = 'entities'
-  with open(os.path.join(path, '_.{}.jsonld'.format(tbl)), 'w') as fw:
+  with open(os.path.join(path, '_.{}.jsonl'.format(tbl)), 'w') as fw:
     meta_uri.path = meta_base_path + '/{}/count'.format(tbl)
     #
     n_objs = json.load(urlopen(

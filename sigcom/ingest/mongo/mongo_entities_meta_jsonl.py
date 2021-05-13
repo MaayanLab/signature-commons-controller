@@ -1,10 +1,9 @@
-import os
 import pymongo
 import json
 from sigcom.util import first, mongo_bulk_upsert
 
 inputs = (
-  '*.entities.jsonld',
+  '*.entities.jsonl',
 )
 
 def requirements(uri=[], **kwargs):

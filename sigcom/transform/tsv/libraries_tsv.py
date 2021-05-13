@@ -7,7 +7,7 @@ inputs = (
   '*.libraries.tsv',
 )
 outputs = (
-  '*.libraries.jsonld',
+  '*.libraries.jsonl',
 )
 
 U = uuid.UUID('00000000-0000-0000-0000-000000000000')

@@ -8,7 +8,7 @@ def requirements(uri=[], **kwargs):
   return 'meta' in set([s for u in uri for s in u.scheme.split('+')])
 
 outputs = (
-  '*.resources.jsonld',
+  '*.schemas.jsonl',
 )
 
 def extract(path=None, uri=[], limit=1000, **kwargs):
@@ -23,8 +23,8 @@ def extract(path=None, uri=[], limit=1000, **kwargs):
   meta_uri.scheme = ''.join(set(['http', 'https']) & set(meta_uri.scheme.split('+')))
   meta_base_path = meta_uri.path
   #
-  tbl = 'resources'
-  with open(os.path.join(path, '_.{}.jsonld'.format(tbl)), 'w') as fw:
+  tbl = 'schemas'
+  with open(os.path.join(path, '_.{}.jsonl'.format(tbl)), 'w') as fw:
     meta_uri.path = meta_base_path + '/{}/count'.format(tbl)
     #
     n_objs = json.load(urlopen(

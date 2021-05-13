@@ -1,5 +1,5 @@
 import os
-from subprocess import check_output, check_call
+from subprocess import check_call
 
 inputs = (
   '*.data.T.tsv.so',

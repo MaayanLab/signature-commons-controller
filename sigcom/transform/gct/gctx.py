@@ -9,8 +9,8 @@ inputs = (
 
 outputs = (
   '*.data.uuid.tsv',
-  '*.signatures.jsonld',
-  '*.entities.jsonld',
+  '*.signatures.jsonl',
+  '*.entities.jsonl',
 )
 
 def transform(input_files, output_files, **kwargs):

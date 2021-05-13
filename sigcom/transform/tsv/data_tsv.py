@@ -1,14 +1,11 @@
-import h5py
 import json
-import uuid
 import csv
-import itertools
 import os
 
 inputs = (
   '*.data.tsv',
-  '*.signatures.jsonld',
-  '*.entities.jsonld',
+  '*.signatures.jsonl',
+  '*.entities.jsonl',
 )
 outputs = (
   '*.data.uuid.tsv',

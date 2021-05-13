@@ -69,7 +69,7 @@ extra_synonyms = {}
 for gene, geneid in resolved.items():
   extra_synonyms[geneid] = extra_synonyms.get(geneid, set()) | set([gene])
 
-# Write to entities.jsonld
+# Write to entities.jsonl
 with open(os.path.join(OUTPUT, 'example.entities.jsonl'), 'w') as fw:
   for _, row in df.iterrows():
     row_json = row.to_dict()
