@@ -1,4 +1,5 @@
 import json
+from sigcom.util.get_one_of import get_one_of
 
 inputs = (
   '*.signatures.jsonl',
@@ -14,6 +15,8 @@ def transform(input_files, output_files, **kwargs):
     with open(output_file, 'w') as fw:
       for doc in map(json.loads, fr):
         print(
-          doc['@id'], doc['library'], json.dumps(doc['meta']),
+          get_one_of(doc, ('@id', 'id', '_id')),
+          doc['library'],
+          json.dumps(doc.get('meta', doc)),
           sep='\t', file=fw
         )

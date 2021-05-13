@@ -1,4 +1,5 @@
 import json
+from sigcom.util.get_one_of import get_one_of
 
 inputs = (
   '*.libraries.jsonl',
@@ -14,10 +15,10 @@ def transform(input_files, output_files, **kwargs):
     with open(output_file, 'w') as fw:
       for doc in map(json.loads, fr):
         print(
-          doc['@id'],
+          get_one_of(doc, ('@id', 'id', '_id')),
           '' if doc.get('resource') is None else doc['resource'],
           '' if doc.get('dataset') is None else doc['dataset'],
           '' if doc.get('dataset_type') is None else doc['dataset_type'],
-          json.dumps(doc['meta']),
+          json.dumps(doc.get('meta', doc)),
           sep='\t', file=fw
         )
