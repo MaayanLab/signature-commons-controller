@@ -63,7 +63,7 @@ def cli():
 @handle_dry_run
 def extract(dry_run=False, **kwargs):
   if dry_run:
-    for item in router.relevant_ingests(**kwargs):
+    for item in router.relevant_extracts(**kwargs):
       click.echo(item)
   else:
     router.extract(**kwargs)
