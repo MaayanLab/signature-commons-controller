@@ -1,7 +1,7 @@
 import json
 import csv
-import uuid
 import os
+from sigcom.util import canonical_uuid, try_json_loads
 
 inputs = (
   '*.signatures.tsv',
@@ -9,16 +9,6 @@ inputs = (
 outputs = (
   '*.signatures.jsonl',
 )
-
-U = uuid.UUID('00000000-0000-0000-0000-000000000000')
-def canonical_uuid(obj):
-  return str(uuid.uuid5(U, str(obj)))
-
-def try_json_loads(v):
-  try:
-    return json.loads(v)
-  except:
-    return v
 
 def transform(input_files, output_files, **kwargs):
   input_file, = input_files

@@ -7,9 +7,8 @@ import uuid
 INPUT='input'
 OUTPUT='output'
 
-U = uuid.UUID('00000000-0000-0000-0000-000000000000')
 def canonical_uuid(obj):
-  return str(uuid.uuid5(U, str(obj)))
+  return str(uuid.uuid5(uuid.UUID(int=0), str(obj)))
 def with_canonical_uuid(obj):
   return dict(obj, **{
     '@id': canonical_uuid(obj)
