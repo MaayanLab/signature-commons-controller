@@ -2,18 +2,19 @@ import os
 import minio
 from sigcom.util.first import first
 
-outputs = (
-  '*.data.tsv.so',
+inputs = (
+  '*.data.geneset.h5',
 )
 
 def requirements(uri=[], **kwargs):
   return 's3' in set([s for u in uri for s in u.scheme.split('+')])
 
-def extract(path=None, uri=[], **kwargs):
+def ingest(input_files, uri=[], **kwargs):
+  h5, = input_files
   # Get s3 uri
   s3_uri = first(u for u in uri if 's3' in u.scheme.split('+'))
   [_, s3_bucket, *subpath] = s3_uri.path.split('/')
-  s3_prefix = '/'.join(subpath).rstrip('/') + '/'
+  s3_prefix = '/'.join(subpath)
   s3_access_key = s3_uri.username
   s3_secret_key = s3_uri.password
   del s3_uri.username
@@ -24,11 +25,9 @@ def extract(path=None, uri=[], **kwargs):
     secret_key=s3_secret_key,
     secure='https' in s3_uri.scheme,
   )
-  # Find objects
-  for obj in s3_client.list_objects(s3_bucket, prefix=s3_prefix):
-    if obj.object_name.endswith('.data.tsv.so'):
-      s3_client.fget_object(
-        s3_bucket,
-        obj.object_name,
-        os.path.join(path, os.path.relpath(obj.object_name, s3_prefix))
-      )
+  # Upload object
+  s3_client.fput_object(
+    s3_bucket,
+    '/'.join(filter(None, [s3_prefix, os.path.basename(h5)])),
+    h5,
+  )

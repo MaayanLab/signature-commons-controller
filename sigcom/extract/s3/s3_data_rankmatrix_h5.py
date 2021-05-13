@@ -3,7 +3,7 @@ import minio
 from sigcom.util.first import first
 
 outputs = (
-  '*.data.gmt.so',
+  '*.data.rankmatrix.h5',
 )
 
 def requirements(uri=[], **kwargs):
@@ -26,7 +26,7 @@ def extract(path=None, uri=[], **kwargs):
   )
   # Find objects
   for obj in s3_client.list_objects(s3_bucket, prefix=s3_prefix):
-    if obj.object_name.endswith('.data.gmt.so'):
+    if obj.object_name.endswith('.data.rankmatrix.h5'):
       s3_client.fget_object(
         s3_bucket,
         obj.object_name,

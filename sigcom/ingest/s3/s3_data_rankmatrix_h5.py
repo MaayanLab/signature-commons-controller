@@ -3,14 +3,14 @@ import minio
 from sigcom.util.first import first
 
 inputs = (
-  '*.data.gmt.so',
+  '*.data.rankmatrix.h5',
 )
 
 def requirements(uri=[], **kwargs):
   return 's3' in set([s for u in uri for s in u.scheme.split('+')])
 
 def ingest(input_files, uri=[], **kwargs):
-  so, = input_files
+  h5, = input_files
   # Get s3 uri
   s3_uri = first(u for u in uri if 's3' in u.scheme.split('+'))
   [_, s3_bucket, *subpath] = s3_uri.path.split('/')
@@ -28,6 +28,6 @@ def ingest(input_files, uri=[], **kwargs):
   # Upload object
   s3_client.fput_object(
     s3_bucket,
-    '/'.join(filter(None, [s3_prefix, os.path.basename(so)])),
-    so,
+    '/'.join(filter(None, [s3_prefix, os.path.basename(h5)])),
+    h5,
   )

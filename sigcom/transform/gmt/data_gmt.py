@@ -8,7 +8,7 @@ inputs = (
 )
 
 outputs = (
-  '*.data.uuid.gmt',
+  '*.data.h5',
 )
 
 def transform(input_files, output_files, **kwargs):
@@ -24,26 +24,16 @@ def transform(input_files, output_files, **kwargs):
     for ent in map(json.loads, open(entity_meta, 'r'))
     for sym in ([ent['meta']['Name']] + ent['meta'].get('Synonyms', []))
   }
-
-  with open(gmt, 'r') as fr:
-    try:
-      with open(signature_data, 'w') as fw:
-        for line in fr:
-          sig_id, ents = line.split('\t\t', maxsplit=1)
-          # resolve entities (with/without expression)
-          ents_split = ents.split('\t')
-          ents_resolved = [
-            ent_id_lookup[ent]
-            for ent in ents_split
-            if ent_id_lookup.get(ent)
-          ]
-          print(
-            sig_id_lookup[sig_id],
-            '',
-            *ents_resolved,
-            sep='\t',
-            file=fw,
-          )
-    except Exception as e:
-      os.remove(signature_data)
-      raise e
+  try:
+    gmt_parsed = {}
+    with open(gmt, 'r') as fr:
+      for line in fr:
+        sig_id, ents = line.split('\t\t', maxsplit=1)
+        gmt_parsed[sig_id_lookup[sig_id]] = [
+          ent_id_lookup[ent_id]
+          for ent_id in ents.split('\t')
+        ]
+      # TODO
+  except Exception as e:
+    os.remove(signature_data)
+    raise e

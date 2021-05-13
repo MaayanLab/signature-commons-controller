@@ -1,6 +1,8 @@
 import json
-import csv
-import os
+import h5py
+import numpy as np
+import pandas as pd
+from sigcom.util import generate_slices
 
 inputs = (
   '*.data.tsv',
@@ -8,7 +10,7 @@ inputs = (
   '*.entities.jsonl',
 )
 outputs = (
-  '*.data.uuid.tsv',
+  '*.data.rankmatrix.h5',
 )
 
 def transform(input_files, output_files, **kwargs):
@@ -25,17 +27,13 @@ def transform(input_files, output_files, **kwargs):
     for sym in ([ent['meta']['Name']] + ent['meta'].get('Synonyms', []))
   }
 
-  with open(tsv, 'r') as fr:
-    reader = csv.reader(fr, delimiter='\t')
-    header = next(iter(reader))
-    try:
-      with open(signature_data, 'w') as fw:
-        print('', *[
-          sig_id_lookup[col]
-          for col in header[1:]
-        ], sep='\t', file=fw)
-        for row in reader:
-          print(ent_id_lookup[row[0]], *row[1:], sep='\t', file=fw)
-    except Exception as e:
-      os.remove(signature_data)
-      raise e
+  fr = pd.read_csv(tsv, sep='\t', index_col=0)
+  fw = h5py.File(signature_data, 'w')
+  for ind, (start, end) in enumerate(generate_slices(fr.shape[1], 10000)):
+    ranked = fr.iloc[:, start:end].rank(axis=0, method='first').astype(np.int16)
+    fw.create_dataset('data/expression/{}'.format(ind), data=ranked.values)
+  fw.create_dataset('meta/colid', data=fr.columns.map(lambda col: sig_id_lookup[col]).values, dtype=h5py.string_dtype('utf-8'))
+  fw.create_dataset('meta/rowid', data=fr.index.map(lambda row: ent_id_lookup[row]).values, dtype=h5py.string_dtype('utf-8'))
+  fw.create_dataset('meta/orig_colid', data=fr.columns.values, dtype=h5py.string_dtype('utf-8'))
+  fw.create_dataset('meta/orig_rowid', data=fr.index.values, dtype=h5py.string_dtype('utf-8'))
+  fw.close()
