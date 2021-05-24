@@ -4,11 +4,13 @@ from functools import wraps
 from sigcom import router
 from sigcom.util import ParsedUrl
 
+logger = logging.getLogger(__name__)
+
 def handle_verbosity(func):
   @click.option('-v', '--verbose', count=True, help='Increase logging level')
   @wraps(func)
   def wrapper(verbose=0, **kwargs):
-    logging.basicConfig(level=max(0, 40 - verbose*10))
+    logging.basicConfig(level=max(0, 30 - (verbose*10)))
     return func(**kwargs)
   return wrapper
 
@@ -46,12 +48,11 @@ def handle_actions(func):
   @wraps(func)
   def wrapper(actions=[], **kwargs):
     for action in actions:
-      logging.info('Processing action:{action}'.format(action=action))
+      logger.info('Processing action:{action}'.format(action=action))
     return func(actions=actions, **kwargs)
   return wrapper
 
 @click.group()
-@handle_verbosity
 @click.version_option()
 def cli():
   pass

@@ -1,6 +1,8 @@
 import logging
 from copy import deepcopy
 
+logger = logging.getLogger(__name__)
+
 def get_actions(**kwargs):
   import sigcom.action as actions
   for _, mod in sorted(actions.__dict__.items()):
@@ -11,17 +13,17 @@ def get_actions(**kwargs):
         callable(mod.requirements),
         callable(mod.apply),
       ])
-      logging.info('Found action: {}'.format(mod))
+      logger.debug('Found action: {}'.format(mod.__name__))
       if mod.requirements(**kwargs):
         yield mod
       else:
-        logging.info('Unsatisfied requirements')
+        logger.debug('Unsatisfied requirements')
     except Exception as e:
-      logging.debug('Rejected: {}, {}'.format(mod, e))
+      logger.debug('Rejected: {}, {}'.format(mod.__name__, e))
 
 def action(action=None, **kwargs):
   for action in get_actions(**kwargs):
-    logging.debug('Applying action {}'.format(action))
+    logger.debug('Applying action {}'.format(action.__name__))
     action.apply(**deepcopy(kwargs))
 
 
@@ -31,19 +33,19 @@ def get_extracts(**kwargs):
     if str(type(mod)) != "<class 'module'>":
       continue
     try:
-      logging.debug('Checking: {}'.format(mod))
+      logger.debug('Checking: {}'.format(mod))
       assert all([
         callable(mod.requirements),
         type(mod.outputs) == tuple,
         callable(mod.extract),
       ])
-      logging.info('Found extract: {}'.format(mod))
+      logger.debug('Found extract: {}'.format(mod.__name__))
       if mod.requirements(**kwargs):
         yield mod
       else:
-        logging.info('Unsatisfied requirements')
+        logger.debug('Unsatisfied requirements')
     except Exception as e:
-      logging.debug('Rejected: {}, {}'.format(mod, e))
+      logger.debug('Rejected: {}, {}'.format(mod.__name__, e))
 
 def relevant_extracts(path=None, **kwargs):
   ''' Relevant extracts are those whos outputs are not yet satisfied.
@@ -66,12 +68,12 @@ def relevant_extracts(path=None, **kwargs):
         if glob.fnmatch.fnmatch(f, out):
           P[out] = P.get(out, set()) | set([f])
     if set(e.outputs) > set(P.keys()):
-      logging.debug('Found relevant extract: {}'.format(e))
+      logger.debug('Found relevant extract: {}'.format(e.__name__))
       yield e
 
 def extract(**kwargs):
   for extract in relevant_extracts(**kwargs):
-    logging.debug('Extracting with {}'.format(extract))
+    logger.debug('Extracting with {}'.format(extract.__name__))
     extract.extract(**deepcopy(kwargs))
 
 
@@ -86,13 +88,13 @@ def get_ingests(**kwargs):
         type(mod.inputs) == tuple,
         callable(mod.ingest),
       ])
-      logging.info('Found ingest: {}'.format(mod))
+      logger.debug('Found ingest: {}'.format(mod.__name__))
       if mod.requirements(**kwargs):
         yield mod
       else:
-        logging.info('Unsatisfied requirements')
+        logger.debug('Unsatisfied requirements')
     except Exception as e:
-      logging.debug('Rejected: {}, {}'.format(mod, e))
+      logger.debug('Rejected: {}, {}'.format(mod.__name__, e))
 
 def relevant_ingests(paths=[], **kwargs):
   ''' Relevant ingests are those whos inputs are satisfiable
@@ -114,7 +116,7 @@ def relevant_ingests(paths=[], **kwargs):
   #
   for i in get_ingests(paths=paths, **kwargs):
     basenames = set(f.split('.', maxsplit=1)[0] for f in files)
-    print(basenames)
+    logger.info(basenames)
     for basename in basenames:
       P = {}
       for f in files:
@@ -123,10 +125,10 @@ def relevant_ingests(paths=[], **kwargs):
         for inp in i.inputs:
           if glob.fnmatch.fnmatch(f, inp):
             P[inp] = P.get(inp, set()) | set([f])
-      print(i.inputs, P)
+      logger.debug(i.inputs, P)
       if set(i.inputs) == set(P.keys()):
         for fs in itertools.product(*P.values()):
-          logging.debug('Found relevant ingest: {}({})'.format(i, fs))
+          logger.info('Found relevant ingest: {}({})'.format(i.__name__, fs))
           yield (
             i,
             dict(zip(P.keys(), fs)),
@@ -134,7 +136,7 @@ def relevant_ingests(paths=[], **kwargs):
 
 def ingest(**kwargs):
   for ingest, input_files in relevant_ingests(**kwargs):
-    print(ingest, input_files)
+    logger.info(ingest.__name__, input_files)
     ingest.ingest(
       tuple(
         input_files[k]
@@ -154,10 +156,10 @@ def get_transformers(**kwargs):
         type(mod.outputs) == tuple,
         callable(mod.transform),
       ])
-      logging.info('Using transformer: {}'.format(mod))
+      logger.debug('Loaded transformer: {}'.format(mod.__name__))
       yield mod
     except:
-      logging.debug('Rejected: {}'.format(mod))
+      logger.debug('Rejected: {}'.format(mod.__name__))
 
 def relevant_transformers(paths=[], **kwargs):
   ''' Relevant transformers are those whos outputs are not satisfied but inputs are.
@@ -193,7 +195,7 @@ def relevant_transformers(paths=[], **kwargs):
             for out in t.outputs
           }
           if set(outputs.values()) - set(files) != set():
-            logging.debug('Found relevant transformer: {}'.format(t))
+            logger.info('Found relevant transformer: {}'.format(t.__name__))
             yield (
               t,
               dict(zip(P.keys(), fs)),
@@ -202,7 +204,7 @@ def relevant_transformers(paths=[], **kwargs):
 
 def transform(**kwargs):
   for transform, input_files, output_files in relevant_transformers(**kwargs):
-    print(transform, input_files, output_files)
+    logger.info(transform, input_files, output_files)
     transform.transform(
       tuple(
         input_files[k]
