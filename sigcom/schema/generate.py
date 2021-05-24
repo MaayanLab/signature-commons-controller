@@ -2,6 +2,13 @@ import functools
 import collections
 
 def type_walk(obj, path=tuple()):
+  ''' Recursive walk through object, returning a flat typeset of the form:
+  (subject_type, key, object_type)
+  Examples:
+  (dict, 'a', str)
+  (list, '[]', int)
+  (dict, 'a', dict, 'b', list, '[]', str)
+  '''
   if type(obj) == list:
     for v in obj:
       for leaf in type_walk(v, path=(*path, list, '[]')):
@@ -13,9 +20,28 @@ def type_walk(obj, path=tuple()):
   else:
     yield (*path, type(obj))
 
-def create_schema(union_type, intersection_type):
+def filter_trim_prefix(tupleset, prefix):
+  ''' Given a tupleset, filter & trim it by a given prefix
+  example
+  tupleset:
+    (a, b, c)
+    (a, b)
+    (a, c)
+    (a,)
+  filter_trim_prefix(tupleset, ('a',)) == (b, c), (b,), (c,), tuple()
+  filter_trim_prefix(tupleset, ('a',b,)) == (c), tuple()
+  '''
+  for info in tupleset:
+    if len(info) < len(prefix): continue
+    if any(a != b for a, b in zip(info, prefix)): continue
+    yield info[len(prefix):]
+
+def create_partial_json_schema(union_typeset, intersection_typeset):
+  ''' Using a union & intersection typeset,
+  produce a partial json schema specification
+  '''
   schemas = {}
-  for (object_type, *rest) in union_type:
+  for (object_type, *rest) in union_typeset:
     if object_type == dict:
       key, value_type, *_ = rest
       if object_type not in schemas:
@@ -23,21 +49,9 @@ def create_schema(union_type, intersection_type):
       if key not in schemas[object_type]:
         schemas[object_type][key] = {}
       if value_type not in schemas[object_type][key]:
-        schemas[object_type][key][value_type] = create_schema(
-          frozenset(
-            (_value_type, *__rest)
-            for (_object_type, *_rest) in union_type
-            if object_type == _object_type
-            for (_key, _value_type, *__rest) in (_rest,)
-            if key == _key and value_type == _value_type
-          ),
-          frozenset(
-            (_value_type, *__rest)
-            for (_object_type, *_rest) in intersection_type
-            if object_type == _object_type
-            for (_key, _value_type, *__rest) in (_rest,)
-            if key == _key and value_type == _value_type
-          ),
+        schemas[object_type][key][value_type] = create_partial_json_schema(
+          frozenset(filter_trim_prefix(union_typeset, (object_type, key, value_type))),
+          frozenset(filter_trim_prefix(intersection_typeset, (object_type, key, value_type))),
         )
     elif object_type == list:
       key, value_type, *_ = rest
@@ -46,17 +60,9 @@ def create_schema(union_type, intersection_type):
       if key not in schemas[object_type]:
         schemas[object_type][key] = {}
       if value_type not in schemas[object_type][key]:
-        schemas[object_type][key][value_type] = create_schema(
-          frozenset(
-            (_value_type, *_rest)
-            for (_object_type, _key, _value_type, *_rest) in union_type
-            if object_type == _object_type and key == _key and value_type == _value_type
-          ),
-          frozenset(
-            (_value_type, *_rest)
-            for (_object_type, _key, _value_type, *_rest) in intersection_type
-            if object_type == _object_type and key == _key and value_type == _value_type
-          ),
+        schemas[object_type][key][value_type] = create_partial_json_schema(
+          frozenset(filter_trim_prefix(union_typeset, (object_type, key, value_type))),
+          frozenset(filter_trim_prefix(intersection_typeset, (object_type, key, value_type))),
         )
     elif object_type in {int, float, str}:
       if object_type not in schemas:
@@ -95,15 +101,27 @@ def create_schema(union_type, intersection_type):
       schema.update(_schema)
   return schema
 
-def generate(name, data):
-  type_counts = collections.Counter(map(frozenset, map(type_walk, data)))
-  union_type = functools.reduce(frozenset.union, type_counts.keys())
-  intersection_type = functools.reduce(frozenset.intersection, type_counts.keys())
+def create_complete_json_schema(id, data):
+  '''
+  1. Walk through the data collecting typesets
+  2. Find the "union_typeset" or the set of deep types which satisfies at least one record
+  3. Find the "intersection_typeset" or the set of deep types which is satisfied by all records
+  4. Supplement create_partial_json_schema with front-matter to finalize json-schema spec
+  '''
+  typeset = collections.Counter(map(frozenset, map(type_walk, data)))
+  union_typeset = functools.reduce(frozenset.union, typeset.keys())
+  intersection_typeset = functools.reduce(frozenset.intersection, typeset.keys())
+  schema = create_partial_json_schema(union_typeset, intersection_typeset)
+  assert schema['type'] == 'object', 'An error occured, we should have object records..'
+  schema['properties']['$schema'] = {
+    'type': 'string',
+    'enum': [id],
+  }
   return {
-    "$id": "/{name}.json".format(name=name),
+    "$id": id,
     "$schema": "http://json-schema.org/draft-04/schema#",
     "allOf": [
       {"$ref": "/dcic/signature-commons-schema/v5/core/meta.json"},
-      create_schema(union_type, intersection_type),
+      schema,
     ]
   }
