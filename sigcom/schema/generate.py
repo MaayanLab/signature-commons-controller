@@ -89,7 +89,9 @@ def create_partial_json_schema(union_typeset, intersection_typeset):
         _schema['items'] = {"oneOf": list(obj['[]'].values())}
       else:
         _schema['items'] = next(iter(obj['[]'].values()))
-    elif object_type in {int, float}:
+    elif object_type == int:
+      _schema['type'] = 'integer'
+    elif object_type == float:
       _schema['type'] = 'number'
     elif object_type == str:
       _schema['type'] = 'string'
