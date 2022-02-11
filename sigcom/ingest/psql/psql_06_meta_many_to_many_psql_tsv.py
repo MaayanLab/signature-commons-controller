@@ -38,7 +38,7 @@ def ingest(input_files, uri=[], limit=1000, **kwargs):
     insert into signatures_entities (signature, entity, direction, score, top_signatures, top_entities)
       select signature, entity, direction, score, top_signatures, top_entities
       from signatures_entities_tmp
-      on conflict do nothing
+      on conflict DO UPDATE
     ;
   ''')
   cur.execute('drop table signatures_entities_tmp;')
